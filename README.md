@@ -2,7 +2,7 @@
 
 FitQuest is a gamified fitness RPG built with Flutter and DartStream Cloud Services.
 
-Instead of simply tracking habits, FitQuest transforms healthy activities into an RPG experience where players create a hero, complete daily quests, earn XP and Gold, maintain streaks, unlock achievements, and level up through real-world actions.
+Instead of simply tracking habits, FitQuest transforms healthy activities into RPG progression. Players create a hero, complete daily quests, earn XP and Gold, maintain streaks, unlock achievements, collect items, equip gear, battle bosses, and level up through real-world healthy habits.
 
 ---
 
@@ -10,18 +10,20 @@ Instead of simply tracking habits, FitQuest transforms healthy activities into a
 
 ### 🛡 Hero Classes
 
-Choose your character:
+Choose your hero class:
 
 - Warrior
 - Ranger
-- Monk
 - Mage
+- Monk
+
+Hero selection is persisted using DartStream Cloud Save.
 
 ---
 
-### ⚔ RPG Progression
+### ⚡ RPG Progression System
 
-Earn XP by completing healthy habits.
+Earn XP by completing fitness activities.
 
 | Activity       | XP Reward |
 | -------------- | --------- |
@@ -29,6 +31,21 @@ Earn XP by completing healthy habits.
 | 🏋 Workout     | +25 XP    |
 | 🚶 Walk        | +15 XP    |
 | 🧘 Meditate    | +20 XP    |
+
+#### Level Formula
+
+```dart
+Level = (XP ~/ 100) + 1;
+```
+
+| XP   | Level |
+| ---- | ----- |
+| 0    | 1     |
+| 100  | 2     |
+| 500  | 6     |
+| 1000 | 11    |
+
+---
 
 ### 💰 Gold System
 
@@ -41,80 +58,149 @@ Earn gold alongside XP.
 | 🚶 Walk        | +5 Gold     |
 | 🧘 Meditate    | +5 Gold     |
 
-Gold is planned to be used for:
+Gold can be used for:
 
+- Shop purchases
 - Equipment
-- Hero Upgrades
-- Shops
-- Inventory Items
+- Inventory items
+- Future hero upgrades
 
 ---
 
 ### 📅 Daily Quests
 
-Complete daily quests to earn bonus rewards:
+Current quests:
 
-- 💧 Drink Water ×5
-- 🏋 Workout ×1
-- 🚶 Walk ×1
-- 🧘 Meditate ×1
+- Drink Water ×5
+- Workout ×1
+- Walk ×1
+- Meditate ×1
 
 Features:
 
-- Quest progress persists between sessions
-- Cloud-saved player progress
+- Persistent progress
 - Automatic daily reset
 - Bonus XP rewards
+- Cloud-saved state
 
 ---
 
 ### 🔥 Streak System
 
-FitQuest tracks consecutive active days.
+Track consecutive active days.
 
 Features:
 
 - Daily streak tracking
-- Automatic streak updates
-- Streak resets after inactivity
+- Automatic streak increment
+- Streak reset after inactivity
 - Future streak rewards
 
 Example:
 
 ```text
-🔥 Streak: 7 Days
+🔥 Streak: 14 Days
 ```
-
----
-
-### 🏅 Level System
-
-Current level formula:
-
-```dart
-Level = (XP ~/ 100) + 1;
-```
-
-Examples:
-
-| XP  | Level |
-| --- | ----- |
-| 0   | 1     |
-| 100 | 2     |
-| 200 | 3     |
-| 500 | 6     |
 
 ---
 
 ### 🏆 Achievement System
 
-Achievements currently planned and partially implemented:
+Achievements unlock automatically based on player progress.
 
-- 💧 First Drink
-- 🏋 First Workout
-- 🔥 7 Day Streak
-- ⭐ Reach Level 5
-- 💰 Earn 100 Gold
+Examples:
+
+- First Drink
+- First Workout
+- Reach Level 5
+- Earn 100 Gold
+- 7 Day Streak
+- Boss Slayer
+
+---
+
+### 🎁 Daily Rewards
+
+Players can claim daily rewards.
+
+Reward examples:
+
+- Gold
+- XP
+- Potions
+- Equipment
+
+---
+
+### 🎒 Inventory System
+
+Supported item types:
+
+#### Consumables
+
+- Small XP Potion
+- Large XP Potion
+- Gold Boost
+
+#### Equipment
+
+- Weapons
+- Armor
+- Accessories
+
+Features:
+
+- Inventory persistence
+- Item usage
+- Equipment management
+- Cloud synchronization
+
+---
+
+### ⚔ Equipment System
+
+Equipment slots:
+
+- Weapon
+- Armor
+- Accessory
+
+Example:
+
+```text
+Weapon: Iron Sword
+Armor: Steel Armor
+Accessory: Magic Ring
+```
+
+---
+
+### 🛒 Shop System
+
+Players can spend gold on:
+
+- XP Potions
+- Weapons
+- Armor
+- Accessories
+
+---
+
+### 👹 Boss Battle System
+
+Example bosses:
+
+- Forest Troll
+- Goblin King
+- Shadow Beast
+
+Possible rewards:
+
+```text
++200 XP
++100 Gold
+Rare Equipment
+```
 
 ---
 
@@ -129,73 +215,111 @@ Used for:
 - User Registration
 - User Login
 - Session Management
+- Account Persistence
+
+Files:
+
+```text
+lib/api/firebase_auth.dart
+lib/state/session.dart
+```
 
 ### Cloud Save
 
 Used for:
 
-- Saving Player Progress
-- Loading Player Data
-- Quest Persistence
-- XP Tracking
-- Gold Tracking
-- Streak Tracking
+- Hero Class
+- XP
+- Gold
+- Streak
+- Daily Quests
+- Daily Rewards
+- Inventory
+- Equipment
+- Achievements
+- Boss Progress
 
-Example:
+Files:
 
-```dart
-await cloudSave.savePlayer(
-  userId: session.userId!,
-  tenantId: session.tenantId!,
-  player: player,
-);
-```
-
-### Example Saved Player Snapshot
-
-```json
-{
-  "heroClass": "warrior",
-  "xp": 400,
-  "gold": 25,
-  "waterCount": 6,
-  "workoutCount": 4,
-  "walkCount": 3,
-  "meditationCount": 1,
-  "streak": 5,
-  "waterQuestProgress": 3,
-  "workoutQuestProgress": 1,
-  "walkQuestProgress": 1,
-  "meditateQuestProgress": 0
-}
+```text
+lib/services/cloud_save_service.dart
+lib/api/dartstream.dart
 ```
 
 ---
 
-## 🏗 Project Structure
+## 🌐 API Endpoints Used
+
+### Authentication
+
+#### Register User
+
+```http
+POST {AUTH_HOST}/register
+```
+
+#### Login User
+
+```http
+POST {AUTH_HOST}/login
+```
+
+#### Refresh Session
+
+```http
+POST {AUTH_HOST}/refresh
+```
+
+### Cloud Save
+
+#### Save Snapshot
+
+```http
+POST {API_HOST}/snapshot
+```
+
+#### Load Snapshot
+
+```http
+GET {API_HOST}/snapshot
+```
+
+#### Update Snapshot
+
+```http
+PUT {API_HOST}/snapshot
+```
+
+---
+
+## 📂 Project Structure
 
 ```text
 lib/
-│
+
 ├── api/
 │   ├── dartstream.dart
 │   └── firebase_auth.dart
 │
 ├── models/
 │   ├── player_data.dart
-│   └── daily_quest.dart
+│   ├── daily_quest.dart
+│   └── hero_class.dart
 │
 ├── screens/
 │   ├── login_screen.dart
 │   ├── register_screen.dart
 │   ├── character_setup_screen.dart
-│   └── home_screen.dart
+│   ├── home_screen.dart
+│   ├── inventory_screen.dart
+│   └── profile_screen.dart
 │
 ├── services/
 │   ├── cloud_save_service.dart
 │   ├── xp_service.dart
 │   ├── level_service.dart
-│   └── achievement_service.dart
+│   ├── achievement_service.dart
+│   └── battle_service.dart
 │
 ├── state/
 │   └── session.dart
@@ -205,44 +329,6 @@ lib/
 │
 └── main.dart
 ```
-
----
-
-## 📱 Dashboard
-
-### 🏠 Home
-
-Displays:
-
-- Hero Summary
-- XP Progress
-- Gold
-- Current Level
-- Streak Information
-
-### 📋 Quests
-
-Displays:
-
-- Daily Quests
-- Quest Progress
-- Activity Actions
-
-### 🛡 Hero
-
-Displays:
-
-- Hero Profile
-- Character Statistics
-- Hero Attributes
-
-### 🏆 Achievements
-
-Displays:
-
-- Unlocked Achievements
-- Achievement Progress
-- Future Rewards
 
 ---
 
@@ -261,7 +347,7 @@ Displays:
 ### Authentication
 
 - Firebase Authentication REST API
-- DartStream Authentication
+- DartStream Authentication Layer
 
 ### Persistence
 
@@ -272,42 +358,35 @@ Displays:
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- Flutter SDK
-- Android Studio
-- VS Code (optional)
-- Android Emulator or Physical Device
-
 ### Install Dependencies
 
 ```bash
 flutter pub get
 ```
 
-### Environment Configuration
+### Environment Variables
 
 Create a `.env` file:
 
 ```env
-AUTH_HOST=your_auth_host
-API_HOST=your_api_host
-FIREBASE_API_KEY=your_firebase_api_key
+AUTH_HOST=
+API_HOST=
+FIREBASE_API_KEY=
 ```
 
-### Run the App
+### Run Application
 
 ```bash
 flutter run
 ```
 
-### Run on Chrome
+### Run On Chrome
 
 ```bash
 flutter run -d chrome
 ```
 
-### Run on Android Emulator
+### Run On Android Emulator
 
 ```bash
 flutter emulators --launch Pixel_9_API_36
@@ -318,7 +397,7 @@ flutter run
 
 ## 🗺 Roadmap
 
-### Phase 1 ✅
+### Completed
 
 - Hero Classes
 - XP System
@@ -326,45 +405,33 @@ flutter run
 - Daily Quests
 - Streak Tracking
 - Cloud Save
-
-### Phase 2 🚧
-
 - Achievement System
-- Daily Rewards
-- Hero Attributes
-- Improved UI/Animations
-
-### Phase 3
-
-- Inventory System
-- Equipment System
-- Hero Customization
-- Item Rewards
-
-### Phase 4
-
+- Inventory
+- Equipment
+- Shop
 - Boss Battles
-- Dungeons
-- PvP Challenges
+
+### Future Enhancements
+
+- Avatar Customization
+- PvP Battles
 - Guild System
-
-### Phase 5
-
-- Leaderboards
-- Friends System
+- Global Leaderboards
 - Seasonal Events
 - Multiplayer Challenges
+- AI Fitness Recommendations
 
 ---
 
 ## 👨‍💻 Author
 
-Built with Flutter and DartStream as a learning project demonstrating:
+Built with Flutter and DartStream Cloud Services as a learning project focused on:
 
 - Mobile Development
 - Cloud Persistence
 - Gamification
-- RPG Progression Systems
-- DartStream Cloud APIs
+- RPG Mechanics
+- Fitness Tracking
+- DartStream APIs
 
-FitQuest combines fitness tracking and RPG mechanics into a single mobile experience that encourages healthy habits through gameplay.
+FitQuest demonstrates how healthy habits can be transformed into an engaging RPG progression experience.
