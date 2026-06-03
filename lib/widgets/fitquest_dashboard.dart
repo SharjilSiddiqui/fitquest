@@ -185,7 +185,9 @@ class HeroDashboardTab extends StatelessWidget {
 }
 
 class AchievementsDashboardTab extends StatelessWidget {
-  const AchievementsDashboardTab({super.key});
+  const AchievementsDashboardTab({super.key, required this.achievements});
+
+  final List<String> achievements;
 
   @override
   Widget build(BuildContext context) {
@@ -193,28 +195,28 @@ class AchievementsDashboardTab extends StatelessWidget {
       storageKey: 'achievements-dashboard',
       children: [
         const SectionTitle(title: 'Achievements'),
-        RpgCard(
-          child: SizedBox(
-            height: 260,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 56,
-                    color: Theme.of(context).colorScheme.primary,
+
+        if (achievements.isEmpty)
+          const RpgCard(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: Text('No achievements unlocked yet')),
+            ),
+          ),
+
+        ...achievements.map(
+          (achievement) => RpgCard(
+            child: Row(
+              children: [
+                const Icon(Icons.emoji_events, color: Colors.amber),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    achievement,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Achievements coming soon',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

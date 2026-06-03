@@ -6,6 +6,7 @@ import '../services/cloud_save_service.dart';
 import '../models/daily_quest.dart';
 import '../services/level_service.dart';
 import '../widgets/fitquest_dashboard.dart';
+import '../services/achievement_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.session, required this.player});
@@ -119,6 +120,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void updateAchievements() {
+    final achievements = AchievementService.checkAchievements(
+      waterCount: player.waterCount,
+      workoutCount: player.workoutCount,
+      streak: player.streak,
+      level: LevelService.calculateLevel(player.xp),
+      gold: player.gold,
+    );
+
+    player = player.copyWith(achievements: achievements);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -228,6 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     updateQuest('Drink Water');
+
+    updateAchievements();
+    savePlayer();
   }
 
   void _workout() {
@@ -240,6 +256,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     updateQuest('Workout');
+
+    updateAchievements();
+    savePlayer();
   }
 
   void _walk() {
@@ -252,6 +271,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     updateQuest('Walk');
+
+    updateAchievements();
+    savePlayer();
   }
 
   void _meditate() {
@@ -264,6 +286,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     updateQuest('Meditate');
+
+    updateAchievements();
+    savePlayer();
   }
 
   @override
@@ -278,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onMeditate: _meditate,
       ),
       HeroDashboardTab(player: player),
-      const AchievementsDashboardTab(),
+      AchievementsDashboardTab(achievements: player.achievements),
     ];
 
     return Scaffold(

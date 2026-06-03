@@ -8,13 +8,17 @@ class PlayerData {
   final int workoutCount;
   final int walkCount;
   final int meditationCount;
+
   final int waterQuestProgress;
   final int workoutQuestProgress;
   final int walkQuestProgress;
   final int meditateQuestProgress;
+
   final int streak;
   final String? lastActiveDate;
   final String? lastQuestResetDate;
+
+  final List<String> achievements;
 
   const PlayerData({
     required this.heroClass,
@@ -35,6 +39,8 @@ class PlayerData {
     required this.streak,
     this.lastActiveDate,
     this.lastQuestResetDate,
+
+    required this.achievements,
   });
 
   factory PlayerData.empty() {
@@ -57,6 +63,8 @@ class PlayerData {
       streak: 0,
       lastActiveDate: null,
       lastQuestResetDate: null,
+
+      achievements: const [],
     );
   }
 
@@ -80,6 +88,8 @@ class PlayerData {
       streak: json['streak'] ?? 0,
       lastActiveDate: json['lastActiveDate'],
       lastQuestResetDate: json['lastQuestResetDate'],
+
+      achievements: List<String>.from(json['achievements'] ?? []),
     );
   }
 
@@ -103,6 +113,8 @@ class PlayerData {
       'streak': streak,
       'lastActiveDate': lastActiveDate,
       'lastQuestResetDate': lastQuestResetDate,
+
+      'achievements': achievements,
     };
   }
 
@@ -125,6 +137,8 @@ class PlayerData {
     int? streak,
     String? lastActiveDate,
     String? lastQuestResetDate,
+
+    List<String>? achievements,
   }) {
     return PlayerData(
       heroClass: heroClass ?? this.heroClass,
@@ -149,6 +163,8 @@ class PlayerData {
       streak: streak ?? this.streak,
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
       lastQuestResetDate: lastQuestResetDate ?? this.lastQuestResetDate,
+
+      achievements: achievements ?? this.achievements,
     );
   }
 }

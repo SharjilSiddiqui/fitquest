@@ -37,6 +37,8 @@ class CharacterSetupScreen extends StatelessWidget {
 
       streak: 1,
       lastActiveDate: DateTime.now().toIso8601String(),
+
+      achievements: const [],
     );
 
     try {
