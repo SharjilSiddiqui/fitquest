@@ -10,10 +10,12 @@ class HomeDashboardTab extends StatelessWidget {
     super.key,
     required this.player,
     required this.onClaimDailyReward,
+    required this.onOpenInventory,
   });
 
   final PlayerData player;
   final VoidCallback onClaimDailyReward;
+  final VoidCallback onOpenInventory;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class HomeDashboardTab extends StatelessWidget {
               icon: Icons.inventory_2,
               label: 'Inventory',
               value: '${player.inventory.length}',
+              onTap: onOpenInventory,
             ),
             StatCard(
               icon: Icons.sports_martial_arts,
@@ -62,6 +65,14 @@ class HomeDashboardTab extends StatelessWidget {
               value: '${RpgService.playerPower(player)}',
             ),
           ],
+        ),
+        if (player.activeBossName != null)
+          ActiveBossPreviewCard(player: player),
+        if (player.achievements.isNotEmpty)
+          RecentAchievementCard(achievement: player.achievements.last),
+        InventoryPreviewCard(
+          inventory: player.inventory,
+          onOpenInventory: onOpenInventory,
         ),
       ],
     );
@@ -128,11 +139,15 @@ class HeroDashboardTab extends StatelessWidget {
     required this.player,
     required this.onUseItem,
     required this.onEquipItem,
+    required this.onOpenChest,
+    required this.onOpenInventory,
   });
 
   final PlayerData player;
   final ValueChanged<String> onUseItem;
   final ValueChanged<String> onEquipItem;
+  final ValueChanged<String> onOpenChest;
+  final VoidCallback onOpenInventory;
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +246,8 @@ class HeroDashboardTab extends StatelessWidget {
           inventory: player.inventory,
           onUseItem: onUseItem,
           onEquipItem: onEquipItem,
+          onOpenChest: onOpenChest,
+          onOpenInventory: onOpenInventory,
         ),
       ],
     );
@@ -715,46 +732,214 @@ class DailyRewardCard extends StatelessWidget {
   }
 }
 
+class ActiveBossPreviewCard extends StatelessWidget {
+  const ActiveBossPreviewCard({super.key, required this.player});
+
+  final PlayerData player;
+
+  @override
+  Widget build(BuildContext context) {
+    final bossName = player.activeBossName;
+    if (bossName == null) return const SizedBox.shrink();
+
+    final boss = RpgService.bossByName(bossName);
+
+    return RpgCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.sports_martial_arts)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'Active Boss: ${boss.name}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text('${player.activeBossHp} HP'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: (player.activeBossHp / boss.hp).clamp(0.0, 1.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RecentAchievementCard extends StatelessWidget {
+  const RecentAchievementCard({super.key, required this.achievement});
+
+  final String achievement;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = achievement.split('|');
+    final title = parts.first;
+    final description = parts.length > 1 ? parts[1] : '';
+
+    return RpgCard(
+      child: Row(
+        children: [
+          const CircleAvatar(child: Icon(Icons.emoji_events)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Recent Achievement',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (description.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(description),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InventoryPreviewCard extends StatelessWidget {
+  const InventoryPreviewCard({
+    super.key,
+    required this.inventory,
+    required this.onOpenInventory,
+  });
+
+  final List<String> inventory;
+  final VoidCallback onOpenInventory;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = inventory.take(3).toList();
+
+    return Card(
+      elevation: 1,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: InkWell(
+        onTap: onOpenInventory,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.inventory_2),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Inventory',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onOpenInventory,
+                    child: const Text('View All'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (preview.isEmpty)
+                const Text('No items yet')
+              else
+                ...preview.map(
+                  (itemName) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(iconForItem(itemName), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(itemName)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class StatCard extends StatelessWidget {
   const StatCard({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return RpgCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ],
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    if (onTap == null) return RpgCard(child: content);
+
+    return Card(
+      elevation: 1,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(padding: const EdgeInsets.all(18), child: content),
       ),
     );
   }
@@ -991,16 +1176,71 @@ class EquipmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StatListCard(
-      stats: [
-        StatItem(Icons.gavel, 'Weapon', player.equippedWeapon ?? 'None'),
-        StatItem(Icons.security, 'Armor', player.equippedArmor ?? 'None'),
-        StatItem(
-          Icons.diamond,
-          'Accessory',
-          player.equippedAccessory ?? 'None',
+    return Column(
+      children: [
+        EquipmentSlotCard(
+          icon: Icons.gavel,
+          label: 'Weapon',
+          itemName: player.equippedWeapon,
+        ),
+        const SizedBox(height: 12),
+        EquipmentSlotCard(
+          icon: Icons.security,
+          label: 'Armor',
+          itemName: player.equippedArmor,
+        ),
+        const SizedBox(height: 12),
+        EquipmentSlotCard(
+          icon: Icons.diamond,
+          label: 'Accessory',
+          itemName: player.equippedAccessory,
         ),
       ],
+    );
+  }
+}
+
+class EquipmentSlotCard extends StatelessWidget {
+  const EquipmentSlotCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.itemName,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? itemName;
+
+  @override
+  Widget build(BuildContext context) {
+    return RpgCard(
+      child: Row(
+        children: [
+          CircleAvatar(child: Icon(icon)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.labelLarge),
+                const SizedBox(height: 4),
+                Text(
+                  itemName ?? 'Empty',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (itemName != null)
+            InfoChip(
+              icon: iconForItem(itemName!),
+              label: RpgService.itemEffectLabel(itemName!),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1011,16 +1251,33 @@ class InventoryCard extends StatelessWidget {
     required this.inventory,
     required this.onUseItem,
     required this.onEquipItem,
+    required this.onOpenChest,
+    required this.onOpenInventory,
   });
 
   final List<String> inventory;
   final ValueChanged<String> onUseItem;
   final ValueChanged<String> onEquipItem;
+  final ValueChanged<String> onOpenChest;
+  final VoidCallback onOpenInventory;
 
   @override
   Widget build(BuildContext context) {
     if (inventory.isEmpty) {
-      return const RpgCard(child: Text('Inventory is empty.'));
+      return RpgCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Inventory is empty.'),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onOpenInventory,
+              icon: const Icon(Icons.inventory_2),
+              label: const Text('Manage Inventory'),
+            ),
+          ],
+        ),
+      );
     }
 
     final itemCounts = <String, int>{};
@@ -1028,61 +1285,93 @@ class InventoryCard extends StatelessWidget {
       itemCounts[item] = (itemCounts[item] ?? 0) + 1;
     }
 
-    return SizedBox(
-      height: 280,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: itemCounts.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final itemName = itemCounts.keys.elementAt(index);
-          final count = itemCounts[itemName]!;
-          final canUse = RpgService.isConsumable(itemName);
-          final canEquip = RpgService.isEquippable(itemName);
-
-          return SizedBox(
-            width: 190,
-            child: RpgCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(child: Icon(iconForItem(itemName))),
-                  const SizedBox(height: 14),
-                  Text(
-                    itemName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+    return Column(
+      children: [
+        RpgCard(
+          child: Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.inventory_2)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  '${inventory.length} items ready',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 4),
-                  Text('Owned: $count'),
-                  const Spacer(),
-                  if (canUse)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => onUseItem(itemName),
-                        child: const Text('Use'),
-                      ),
-                    )
-                  else if (canEquip)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => onEquipItem(itemName),
-                        child: const Text('Equip'),
-                      ),
-                    )
-                  else
-                    const Text('Stored'),
-                ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+              FilledButton(
+                onPressed: onOpenInventory,
+                child: const Text('Manage'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 250,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: itemCounts.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final itemName = itemCounts.keys.elementAt(index);
+              final count = itemCounts[itemName]!;
+              final canUse = RpgService.isConsumable(itemName);
+              final canEquip = RpgService.isEquippable(itemName);
+
+              return SizedBox(
+                width: 190,
+                child: RpgCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(child: Icon(iconForItem(itemName))),
+                      const SizedBox(height: 14),
+                      Text(
+                        itemName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(RpgService.itemTypeLabel(itemName)),
+                      const SizedBox(height: 4),
+                      Text('Owned: $count'),
+                      const Spacer(),
+                      if (canUse)
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () => onUseItem(itemName),
+                            child: const Text('Use'),
+                          ),
+                        )
+                      else if (canEquip)
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () => onEquipItem(itemName),
+                            child: const Text('Equip'),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () => onOpenChest(itemName),
+                            child: const Text('Open'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

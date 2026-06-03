@@ -8,6 +8,8 @@ import '../services/level_service.dart';
 import '../services/rpg_service.dart';
 import '../widgets/fitquest_dashboard.dart';
 import '../services/achievement_service.dart';
+import 'inventory_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.session, required this.player});
@@ -404,6 +406,30 @@ class _HomeScreenState extends State<HomeScreen> {
     ).showSnackBar(SnackBar(content: Text('Equipped $itemName.')));
   }
 
+  void _openChest(String itemName) {
+    if (!RpgService.isChest(itemName)) return;
+
+    final inventory = [...player.inventory];
+    final removed = inventory.remove(itemName);
+    if (!removed) return;
+
+    setState(() {
+      player = player.copyWith(
+        gold: player.gold + 150,
+        inventory: [...inventory, RpgService.largeXpPotion],
+      );
+
+      updateAchievements();
+    });
+
+    savePlayer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Epic Chest opened! +150 Gold and Large XP Potion'),
+      ),
+    );
+  }
+
   void _selectBoss(String bossName) {
     final boss = RpgService.bossByName(bossName);
 
@@ -461,10 +487,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _openInventory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InventoryScreen(
+          player: player,
+          getPlayer: () => player,
+          onUseItem: _useItem,
+          onEquipItem: _equipItem,
+          onOpenChest: _openChest,
+          onGoToShop: () {
+            Navigator.pop(context);
+            setState(() => _selectedTab = 4);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(session: widget.session, player: player),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      HomeDashboardTab(player: player, onClaimDailyReward: _claimDailyReward),
+      HomeDashboardTab(
+        player: player,
+        onClaimDailyReward: _claimDailyReward,
+        onOpenInventory: _openInventory,
+      ),
       QuestsDashboardTab(
         quests: quests,
         onDrinkWater: _drinkWater,
@@ -476,6 +534,8 @@ class _HomeScreenState extends State<HomeScreen> {
         player: player,
         onUseItem: _useItem,
         onEquipItem: _equipItem,
+        onOpenChest: _openChest,
+        onOpenInventory: _openInventory,
       ),
       AchievementsDashboardTab(achievements: player.achievements),
       ShopDashboardTab(player: player, onPurchaseItem: _purchaseItem),
@@ -491,8 +551,8 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('FitQuest'),
         actions: [
           IconButton(
-            onPressed: widget.session.signOut,
-            icon: const Icon(Icons.logout),
+            onPressed: _openProfile,
+            icon: const Icon(Icons.account_circle),
           ),
         ],
       ),

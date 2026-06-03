@@ -144,4 +144,27 @@ class RpgService {
   static bool isEquippable(String name) {
     return name == ironSword || name == steelArmor || name == magicRing;
   }
+
+  static String itemTypeLabel(String name) {
+    if (name == smallXpPotion || name == largeXpPotion) return 'Consumable';
+    if (name == ironSword) return 'Weapon';
+    if (name == steelArmor) return 'Armor';
+    if (name == magicRing) return 'Accessory';
+    if (name == epicChest) return 'Chest';
+    return 'Item';
+  }
+
+  static String itemEffectLabel(String name) {
+    if (name == smallXpPotion) return '+50 XP';
+    if (name == largeXpPotion) return '+200 XP';
+    if (name == ironSword) return 'Attack +5';
+    if (name == steelArmor) return 'Defense +10';
+    if (name == magicRing) return 'Wisdom +5';
+    if (name == epicChest) return 'Open for rewards';
+    return 'Stored item';
+  }
+
+  static bool isChest(String name) {
+    return name == epicChest;
+  }
 }
