@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../state/session.dart';
 import '../models/player_data.dart';
-import '../services/xp_service.dart';
 import '../services/cloud_save_service.dart';
 import '../models/daily_quest.dart';
 import '../services/level_service.dart';
+import '../widgets/fitquest_dashboard.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.session, required this.player});
@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late PlayerData player;
   late List<DailyQuest> quests;
+  int _selectedTab = 0;
 
   Future<void> savePlayer() async {
     final api = widget.session.api!;
@@ -217,8 +218,69 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _drinkWater() {
+    setState(() {
+      player = player.copyWith(
+        waterCount: player.waterCount + 1,
+        xp: player.xp + 10,
+        gold: player.gold + 5,
+      );
+    });
+
+    updateQuest('Drink Water');
+  }
+
+  void _workout() {
+    setState(() {
+      player = player.copyWith(
+        workoutCount: player.workoutCount + 1,
+        xp: player.xp + 25,
+        gold: player.gold + 10,
+      );
+    });
+
+    updateQuest('Workout');
+  }
+
+  void _walk() {
+    setState(() {
+      player = player.copyWith(
+        walkCount: player.walkCount + 1,
+        xp: player.xp + 15,
+        gold: player.gold + 5,
+      );
+    });
+
+    updateQuest('Walk');
+  }
+
+  void _meditate() {
+    setState(() {
+      player = player.copyWith(
+        meditationCount: player.meditationCount + 1,
+        xp: player.xp + 20,
+        gold: player.gold + 5,
+      );
+    });
+
+    updateQuest('Meditate');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tabs = [
+      HomeDashboardTab(player: player),
+      QuestsDashboardTab(
+        quests: quests,
+        onDrinkWater: _drinkWater,
+        onWorkout: _workout,
+        onWalk: _walk,
+        onMeditate: _meditate,
+      ),
+      HeroDashboardTab(player: player),
+      const AchievementsDashboardTab(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('FitQuest'),
@@ -229,142 +291,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hero Class: ${player.heroClass}',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Text('Level: ${XpService.levelFromXp(player.xp)}'),
-              Text('XP: ${player.xp}'),
-              Text('🪙 Gold: ${player.gold}'),
-
-              const SizedBox(height: 8),
-
-              Text(
-                '🔥 Streak: ${player.streak} Days',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              LinearProgressIndicator(
-                value: XpService.progressToNextLevel(player.xp),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text('${XpService.currentLevelXp(player.xp)}/100 XP'),
-
-              const SizedBox(height: 24),
-
-              Text('Water: ${player.waterCount}'),
-              Text('Workouts: ${player.workoutCount}'),
-              Text('Walks: ${player.walkCount}'),
-              Text('Meditation: ${player.meditationCount}'),
-
-              const SizedBox(height: 20),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'Daily Quests',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 12),
-
-              ...quests.map(
-                (quest) => ListTile(
-                  leading: Icon(
-                    quest.completed
-                        ? Icons.check_circle
-                        : Icons.circle_outlined,
-                  ),
-                  title: Text(quest.title),
-                  subtitle: Text('${quest.progress}/${quest.target}'),
-                  trailing: Text('+${quest.rewardXp} XP'),
-                ),
-              ),
-
-              FilledButton(
-                onPressed: () async {
-                  setState(() {
-                    player = player.copyWith(
-                      waterCount: player.waterCount + 1,
-                      xp: player.xp + 10,
-                      gold: player.gold + 5,
-                    );
-                  });
-
-                  updateQuest('Drink Water');
-                },
-                child: const Text('💧 Drink Water (+10 XP)'),
-              ),
-
-              const SizedBox(height: 10),
-
-              FilledButton(
-                onPressed: () async {
-                  setState(() {
-                    player = player.copyWith(
-                      workoutCount: player.workoutCount + 1,
-                      xp: player.xp + 25,
-                      gold: player.gold + 10,
-                    );
-                  });
-
-                  updateQuest('Workout');
-                },
-                child: const Text('🏋 Workout (+25 XP)'),
-              ),
-
-              const SizedBox(height: 10),
-
-              FilledButton(
-                onPressed: () async {
-                  setState(() {
-                    player = player.copyWith(
-                      walkCount: player.walkCount + 1,
-                      xp: player.xp + 15,
-                      gold: player.gold + 5,
-                    );
-                  });
-
-                  updateQuest('Walk');
-                },
-                child: const Text('🚶 Walk (+15 XP)'),
-              ),
-
-              const SizedBox(height: 10),
-
-              FilledButton(
-                onPressed: () async {
-                  setState(() {
-                    player = player.copyWith(
-                      meditationCount: player.meditationCount + 1,
-                      xp: player.xp + 20,
-                      gold: player.gold + 5,
-                    );
-                  });
-
-                  updateQuest('Meditate');
-                },
-                child: const Text('🧘 Meditate (+20 XP)'),
-              ),
-            ],
+      body: IndexedStack(index: _selectedTab, children: tabs),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedTab,
+        onTap: (index) => setState(() => _selectedTab = index),
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.task_alt), label: 'Quests'),
+          BottomNavigationBarItem(icon: Icon(Icons.shield), label: 'Hero'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.emoji_events),
+            label: 'Awards',
           ),
-        ),
+        ],
       ),
     );
   }
