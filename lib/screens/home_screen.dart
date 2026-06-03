@@ -5,6 +5,7 @@ import '../models/player_data.dart';
 import '../services/cloud_save_service.dart';
 import '../models/daily_quest.dart';
 import '../services/level_service.dart';
+import '../services/rpg_service.dart';
 import '../widgets/fitquest_dashboard.dart';
 import '../services/achievement_service.dart';
 
@@ -124,12 +125,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final achievements = AchievementService.checkAchievements(
       waterCount: player.waterCount,
       workoutCount: player.workoutCount,
+      walkCount: player.walkCount,
+      meditationCount: player.meditationCount,
       streak: player.streak,
       level: LevelService.calculateLevel(player.xp),
       gold: player.gold,
+      bossDefeatCount: player.bossDefeatCount,
+      defeatedBosses: player.defeatedBosses,
     );
 
-    player = player.copyWith(achievements: achievements);
+    player = player.copyWith(
+      achievements: {...player.achievements, ...achievements}.toList(),
+    );
   }
 
   @override
@@ -171,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     checkDailyQuestReset();
+    updateAchievements();
   }
 
   void updateQuest(String title) {
@@ -237,6 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
         waterCount: player.waterCount + 1,
         xp: player.xp + 10,
         gold: player.gold + 5,
+        vitality: player.vitality + 1,
       );
     });
 
@@ -252,6 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
         workoutCount: player.workoutCount + 1,
         xp: player.xp + 25,
         gold: player.gold + 10,
+        strength: player.strength + 1,
       );
     });
 
@@ -267,6 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
         walkCount: player.walkCount + 1,
         xp: player.xp + 15,
         gold: player.gold + 5,
+        agility: player.agility + 1,
       );
     });
 
@@ -282,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
         meditationCount: player.meditationCount + 1,
         xp: player.xp + 20,
         gold: player.gold + 5,
+        wisdom: player.wisdom + 1,
       );
     });
 
@@ -291,10 +303,168 @@ class _HomeScreenState extends State<HomeScreen> {
     savePlayer();
   }
 
+  void _claimDailyReward() {
+    if (RpgService.isRewardClaimedToday(player)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Daily reward already claimed.')),
+      );
+      return;
+    }
+
+    final rewardDay = player.loginRewardDay.clamp(1, 7);
+
+    setState(() {
+      if (rewardDay == 7) {
+        player = player.copyWith(
+          inventory: [...player.inventory, RpgService.epicChest],
+          lastRewardClaimDate: RpgService.todayKey(),
+          loginRewardDay: 1,
+        );
+      } else {
+        player = player.copyWith(
+          gold: player.gold + RpgService.rewardAmountForDay(rewardDay),
+          lastRewardClaimDate: RpgService.todayKey(),
+          loginRewardDay: rewardDay + 1,
+        );
+      }
+
+      updateAchievements();
+    });
+
+    savePlayer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Claimed ${RpgService.rewardLabelForDay(rewardDay)}.'),
+      ),
+    );
+  }
+
+  void _purchaseItem(String itemName) {
+    final item = RpgService.itemByName(itemName);
+
+    if (player.gold < item.cost) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Not enough gold.')));
+      return;
+    }
+
+    setState(() {
+      player = player.copyWith(
+        gold: player.gold - item.cost,
+        inventory: [...player.inventory, item.name],
+      );
+
+      updateAchievements();
+    });
+
+    savePlayer();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${item.name} purchased.')));
+  }
+
+  void _useItem(String itemName) {
+    if (!RpgService.isConsumable(itemName)) return;
+
+    final inventory = [...player.inventory];
+    final removed = inventory.remove(itemName);
+    if (!removed) return;
+
+    final xpReward = itemName == RpgService.smallXpPotion ? 50 : 200;
+
+    setState(() {
+      player = player.copyWith(xp: player.xp + xpReward, inventory: inventory);
+
+      updateAchievements();
+    });
+
+    savePlayer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Used $itemName for +$xpReward XP.')),
+    );
+  }
+
+  void _equipItem(String itemName) {
+    if (!player.inventory.contains(itemName)) return;
+
+    setState(() {
+      if (itemName == RpgService.ironSword) {
+        player = player.copyWith(equippedWeapon: itemName);
+      } else if (itemName == RpgService.steelArmor) {
+        player = player.copyWith(equippedArmor: itemName);
+      } else if (itemName == RpgService.magicRing) {
+        player = player.copyWith(equippedAccessory: itemName);
+      }
+    });
+
+    savePlayer();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Equipped $itemName.')));
+  }
+
+  void _selectBoss(String bossName) {
+    final boss = RpgService.bossByName(bossName);
+
+    setState(() {
+      player = player.copyWith(
+        activeBossName: boss.name,
+        activeBossHp: boss.hp,
+      );
+    });
+
+    savePlayer();
+  }
+
+  void _attackBoss() {
+    final activeBossName = player.activeBossName;
+    if (activeBossName == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Select a boss first.')));
+      return;
+    }
+
+    final boss = RpgService.bossByName(activeBossName);
+    final damage = RpgService.playerPower(player);
+    final nextHp = player.activeBossHp - damage;
+
+    setState(() {
+      if (nextHp <= 0) {
+        final defeatedBosses = {...player.defeatedBosses, boss.name}.toList();
+
+        player = player.copyWith(
+          xp: player.xp + boss.rewardXp,
+          gold: player.gold + boss.rewardGold,
+          bossDefeatCount: player.bossDefeatCount + 1,
+          defeatedBosses: defeatedBosses,
+          clearActiveBoss: true,
+        );
+
+        updateAchievements();
+      } else {
+        player = player.copyWith(activeBossHp: nextHp);
+      }
+    });
+
+    savePlayer();
+
+    if (nextHp <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${boss.name} defeated! +${boss.rewardXp} XP, +${boss.rewardGold} Gold',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      HomeDashboardTab(player: player),
+      HomeDashboardTab(player: player, onClaimDailyReward: _claimDailyReward),
       QuestsDashboardTab(
         quests: quests,
         onDrinkWater: _drinkWater,
@@ -302,8 +472,18 @@ class _HomeScreenState extends State<HomeScreen> {
         onWalk: _walk,
         onMeditate: _meditate,
       ),
-      HeroDashboardTab(player: player),
+      HeroDashboardTab(
+        player: player,
+        onUseItem: _useItem,
+        onEquipItem: _equipItem,
+      ),
       AchievementsDashboardTab(achievements: player.achievements),
+      ShopDashboardTab(player: player, onPurchaseItem: _purchaseItem),
+      BossBattleDashboardTab(
+        player: player,
+        onSelectBoss: _selectBoss,
+        onAttackBoss: _attackBoss,
+      ),
     ];
 
     return Scaffold(
@@ -327,7 +507,12 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.shield), label: 'Hero'),
           BottomNavigationBarItem(
             icon: Icon(Icons.emoji_events),
-            label: 'Awards',
+            label: 'Achievements',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.storefront), label: 'Shop'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_martial_arts),
+            label: 'Battle',
           ),
         ],
       ),

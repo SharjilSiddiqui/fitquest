@@ -35,8 +35,20 @@ class CharacterSetupScreen extends StatelessWidget {
       walkQuestProgress: 0,
       meditateQuestProgress: 0,
 
+      strength: 1,
+      agility: 1,
+      wisdom: 1,
+      vitality: 1,
+
       streak: 1,
       lastActiveDate: DateTime.now().toIso8601String(),
+      loginRewardDay: 1,
+
+      inventory: const [],
+
+      activeBossHp: 0,
+      bossDefeatCount: 0,
+      defeatedBosses: const [],
 
       achievements: const [],
     );

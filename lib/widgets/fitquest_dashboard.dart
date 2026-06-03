@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../models/daily_quest.dart';
 import '../models/player_data.dart';
+import '../services/rpg_service.dart';
 import '../services/xp_service.dart';
 
 class HomeDashboardTab extends StatelessWidget {
-  const HomeDashboardTab({super.key, required this.player});
+  const HomeDashboardTab({
+    super.key,
+    required this.player,
+    required this.onClaimDailyReward,
+  });
 
   final PlayerData player;
+  final VoidCallback onClaimDailyReward;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +33,8 @@ class HomeDashboardTab extends StatelessWidget {
           progress: progress,
           currentXp: currentXp,
         ),
+        DailyRewardCard(player: player, onClaimDailyReward: onClaimDailyReward),
+        const SectionTitle(title: 'Quick Stats'),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -42,6 +50,16 @@ class HomeDashboardTab extends StatelessWidget {
               icon: Icons.local_fire_department,
               label: 'Streak',
               value: '${player.streak} days',
+            ),
+            StatCard(
+              icon: Icons.inventory_2,
+              label: 'Inventory',
+              value: '${player.inventory.length}',
+            ),
+            StatCard(
+              icon: Icons.sports_martial_arts,
+              label: 'Power',
+              value: '${RpgService.playerPower(player)}',
             ),
           ],
         ),
@@ -105,9 +123,16 @@ class QuestsDashboardTab extends StatelessWidget {
 }
 
 class HeroDashboardTab extends StatelessWidget {
-  const HeroDashboardTab({super.key, required this.player});
+  const HeroDashboardTab({
+    super.key,
+    required this.player,
+    required this.onUseItem,
+    required this.onEquipItem,
+  });
 
   final PlayerData player;
+  final ValueChanged<String> onUseItem;
+  final ValueChanged<String> onEquipItem;
 
   @override
   Widget build(BuildContext context) {
@@ -172,12 +197,40 @@ class HeroDashboardTab extends StatelessWidget {
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
           childAspectRatio: 1.55,
-          children: const [
-            AttributeCard(icon: Icons.sports_martial_arts, label: 'Strength'),
-            AttributeCard(icon: Icons.speed, label: 'Agility'),
-            AttributeCard(icon: Icons.psychology, label: 'Wisdom'),
-            AttributeCard(icon: Icons.favorite, label: 'Vitality'),
+          children: [
+            AttributeCard(
+              icon: Icons.sports_martial_arts,
+              label: 'Strength',
+              value: RpgService.totalStrength(player),
+              bonus: RpgService.strengthBonus(player),
+            ),
+            AttributeCard(
+              icon: Icons.speed,
+              label: 'Agility',
+              value: RpgService.totalAgility(player),
+              bonus: RpgService.agilityBonus(player),
+            ),
+            AttributeCard(
+              icon: Icons.psychology,
+              label: 'Wisdom',
+              value: RpgService.totalWisdom(player),
+              bonus: RpgService.wisdomBonus(player),
+            ),
+            AttributeCard(
+              icon: Icons.favorite,
+              label: 'Vitality',
+              value: RpgService.totalVitality(player),
+              bonus: RpgService.vitalityBonus(player),
+            ),
           ],
+        ),
+        const SectionTitle(title: 'Equipment'),
+        EquipmentCard(player: player),
+        const SectionTitle(title: 'Inventory'),
+        InventoryCard(
+          inventory: player.inventory,
+          onUseItem: onUseItem,
+          onEquipItem: onEquipItem,
         ),
       ],
     );
@@ -204,16 +257,206 @@ class AchievementsDashboardTab extends StatelessWidget {
             ),
           ),
 
-        ...achievements.map(
-          (achievement) => RpgCard(
+        ...achievements.map((achievement) {
+          final parts = achievement.split('|');
+          final title = parts.first;
+          final description = parts.length > 1 ? parts[1] : '';
+
+          return RpgCard(
             child: Row(
               children: [
                 const Icon(Icons.emoji_events, color: Colors.amber),
                 const SizedBox(width: 12),
                 Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(description),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class ShopDashboardTab extends StatelessWidget {
+  const ShopDashboardTab({
+    super.key,
+    required this.player,
+    required this.onPurchaseItem,
+  });
+
+  final PlayerData player;
+  final ValueChanged<String> onPurchaseItem;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardScrollView(
+      storageKey: 'shop-dashboard',
+      children: [
+        SectionTitle(title: 'Shop - ${player.gold} Gold'),
+        ...RpgService.shopItems.map(
+          (item) => RpgCard(
+            child: Row(
+              children: [
+                CircleAvatar(child: Icon(iconForItem(item.name))),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${item.description} • ${item.cost} Gold'),
+                    ],
+                  ),
+                ),
+                FilledButton(
+                  onPressed: player.gold >= item.cost
+                      ? () => onPurchaseItem(item.name)
+                      : null,
+                  child: const Text('Buy'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class BossBattleDashboardTab extends StatelessWidget {
+  const BossBattleDashboardTab({
+    super.key,
+    required this.player,
+    required this.onSelectBoss,
+    required this.onAttackBoss,
+  });
+
+  final PlayerData player;
+  final ValueChanged<String> onSelectBoss;
+  final VoidCallback onAttackBoss;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeBossName = player.activeBossName;
+    final activeBoss = activeBossName == null
+        ? null
+        : RpgService.bossByName(activeBossName);
+
+    return DashboardScrollView(
+      storageKey: 'battle-dashboard',
+      children: [
+        RpgCard(
+          child: Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.sports_martial_arts)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Player Power',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text('${RpgService.playerPower(player)} damage per attack'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SectionTitle(title: 'Active Battle'),
+        if (activeBoss == null)
+          const RpgCard(child: Text('Select a boss to begin.'))
+        else
+          RpgCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        activeBoss.name,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    Text('${player.activeBossHp}/${activeBoss.hp} HP'),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    minHeight: 10,
+                    value: (player.activeBossHp / activeBoss.hp).clamp(
+                      0.0,
+                      1.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: onAttackBoss,
+                    icon: const Icon(Icons.flash_on),
+                    label: const Text('Attack'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SectionTitle(title: 'Bosses'),
+        ...RpgService.bosses.map(
+          (boss) => RpgCard(
+            child: Row(
+              children: [
+                const CircleAvatar(child: Icon(Icons.shield)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        boss.name,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${boss.hp} HP • +${boss.rewardXp} XP • +${boss.rewardGold} Gold',
+                      ),
+                    ],
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () => onSelectBoss(boss.name),
                   child: Text(
-                    achievement,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    player.activeBossName == boss.name ? 'Active' : 'Select',
                   ),
                 ),
               ],
@@ -417,6 +660,57 @@ class InfoChip extends StatelessWidget {
       backgroundColor: colorScheme.secondaryContainer,
       side: BorderSide.none,
       visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+class DailyRewardCard extends StatelessWidget {
+  const DailyRewardCard({
+    super.key,
+    required this.player,
+    required this.onClaimDailyReward,
+  });
+
+  final PlayerData player;
+  final VoidCallback onClaimDailyReward;
+
+  @override
+  Widget build(BuildContext context) {
+    final rewardDay = player.loginRewardDay.clamp(1, 7);
+    final claimed = RpgService.isRewardClaimedToday(player);
+
+    return RpgCard(
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            child: Icon(
+              rewardDay == 7 ? Icons.inventory_2 : Icons.paid,
+              color: Theme.of(context).colorScheme.onTertiaryContainer,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Reward: Day $rewardDay',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(RpgService.rewardLabelForDay(rewardDay)),
+              ],
+            ),
+          ),
+          FilledButton(
+            onPressed: claimed ? null : onClaimDailyReward,
+            child: Text(claimed ? 'Claimed' : 'Claim'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -648,10 +942,18 @@ class _StatRow extends StatelessWidget {
 }
 
 class AttributeCard extends StatelessWidget {
-  const AttributeCard({super.key, required this.icon, required this.label});
+  const AttributeCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.bonus,
+  });
 
   final IconData icon;
   final String label;
+  final int value;
+  final int bonus;
 
   @override
   Widget build(BuildContext context) {
@@ -662,17 +964,143 @@ class AttributeCard extends StatelessWidget {
           Icon(icon, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 8),
           Text(
-            label,
+            '$value',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 2),
-          Text('Coming soon', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            bonus > 0 ? '$label (+$bonus)' : label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
+  }
+}
+
+class EquipmentCard extends StatelessWidget {
+  const EquipmentCard({super.key, required this.player});
+
+  final PlayerData player;
+
+  @override
+  Widget build(BuildContext context) {
+    return StatListCard(
+      stats: [
+        StatItem(Icons.gavel, 'Weapon', player.equippedWeapon ?? 'None'),
+        StatItem(Icons.security, 'Armor', player.equippedArmor ?? 'None'),
+        StatItem(
+          Icons.diamond,
+          'Accessory',
+          player.equippedAccessory ?? 'None',
+        ),
+      ],
+    );
+  }
+}
+
+class InventoryCard extends StatelessWidget {
+  const InventoryCard({
+    super.key,
+    required this.inventory,
+    required this.onUseItem,
+    required this.onEquipItem,
+  });
+
+  final List<String> inventory;
+  final ValueChanged<String> onUseItem;
+  final ValueChanged<String> onEquipItem;
+
+  @override
+  Widget build(BuildContext context) {
+    if (inventory.isEmpty) {
+      return const RpgCard(child: Text('Inventory is empty.'));
+    }
+
+    final itemCounts = <String, int>{};
+    for (final item in inventory) {
+      itemCounts[item] = (itemCounts[item] ?? 0) + 1;
+    }
+
+    return SizedBox(
+      height: 280,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCounts.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final itemName = itemCounts.keys.elementAt(index);
+          final count = itemCounts[itemName]!;
+          final canUse = RpgService.isConsumable(itemName);
+          final canEquip = RpgService.isEquippable(itemName);
+
+          return SizedBox(
+            width: 190,
+            child: RpgCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(child: Icon(iconForItem(itemName))),
+                  const SizedBox(height: 14),
+                  Text(
+                    itemName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Owned: $count'),
+                  const Spacer(),
+                  if (canUse)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => onUseItem(itemName),
+                        child: const Text('Use'),
+                      ),
+                    )
+                  else if (canEquip)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => onEquipItem(itemName),
+                        child: const Text('Equip'),
+                      ),
+                    )
+                  else
+                    const Text('Stored'),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+IconData iconForItem(String itemName) {
+  switch (itemName) {
+    case RpgService.smallXpPotion:
+    case RpgService.largeXpPotion:
+      return Icons.science;
+    case RpgService.ironSword:
+      return Icons.gavel;
+    case RpgService.steelArmor:
+      return Icons.security;
+    case RpgService.magicRing:
+      return Icons.diamond;
+    case RpgService.epicChest:
+      return Icons.inventory_2;
+    default:
+      return Icons.category;
   }
 }
