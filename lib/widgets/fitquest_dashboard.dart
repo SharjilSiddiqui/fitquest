@@ -4,6 +4,7 @@ import '../models/daily_quest.dart';
 import '../models/player_data.dart';
 import '../services/rpg_service.dart';
 import '../services/xp_service.dart';
+import '../services/feature_flag_service.dart';
 
 class HomeDashboardTab extends StatelessWidget {
   const HomeDashboardTab({
@@ -11,11 +12,14 @@ class HomeDashboardTab extends StatelessWidget {
     required this.player,
     required this.onClaimDailyReward,
     required this.onOpenInventory,
+    required this.featureFlags,
   });
 
   final PlayerData player;
   final VoidCallback onClaimDailyReward;
   final VoidCallback onOpenInventory;
+
+  final FeatureFlagService featureFlags;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +30,55 @@ class HomeDashboardTab extends StatelessWidget {
     return DashboardScrollView(
       storageKey: 'home-dashboard',
       children: [
+        RpgCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.tune, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text(
+                    "Platform Flags",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              if (featureFlags.flags.isEmpty)
+                const Text(
+                  "No active flags",
+                  style: TextStyle(color: Colors.grey, fontSize: 15),
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: featureFlags.flags.map<Widget>((flag) {
+                    final name = (flag["name"] ?? flag["key"] ?? "").toString();
+
+                    final enabled =
+                        flag["enabled"] == true || flag["status"] == "active";
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            enabled ? Icons.check_circle : Icons.cancel,
+                            color: enabled ? Colors.green : Colors.red,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(name),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
         _HeroSummaryCard(
           heroClass: player.heroClass,
           level: level,

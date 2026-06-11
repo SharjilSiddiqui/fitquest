@@ -10,6 +10,7 @@ import '../widgets/fitquest_dashboard.dart';
 import '../services/achievement_service.dart';
 import 'inventory_screen.dart';
 import 'profile_screen.dart';
+import '../services/feature_flag_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.session, required this.player});
@@ -24,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late PlayerData player;
   late List<DailyQuest> quests;
+  late FeatureFlagService featureFlags;
   int _selectedTab = 0;
 
   Future<void> savePlayer() async {
@@ -36,6 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
       tenantId: widget.session.tenantId!,
       player: player,
     );
+  }
+
+  Future<void> _loadFlags() async {
+    await featureFlags.load(tenantId: widget.session.tenantId!);
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void checkDailyStreak() {
@@ -146,6 +156,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     player = widget.player;
+    featureFlags = FeatureFlagService(widget.session.api!);
+
+    _loadFlags();
 
     checkDailyStreak();
 
@@ -242,10 +255,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _drinkWater() {
+    final xpReward = featureFlags.enabled("double_xp") ? 20 : 10;
+
     setState(() {
       player = player.copyWith(
         waterCount: player.waterCount + 1,
-        xp: player.xp + 10,
+        xp: player.xp + xpReward,
         gold: player.gold + 5,
         vitality: player.vitality + 1,
       );
@@ -258,10 +273,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _workout() {
+    final xpReward = featureFlags.enabled("double_xp") ? 50 : 25;
+
     setState(() {
       player = player.copyWith(
         workoutCount: player.workoutCount + 1,
-        xp: player.xp + 25,
+        xp: player.xp + xpReward,
         gold: player.gold + 10,
         strength: player.strength + 1,
       );
@@ -274,10 +291,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _walk() {
+    final xpReward = featureFlags.enabled("double_xp") ? 30 : 15;
+
     setState(() {
       player = player.copyWith(
         walkCount: player.walkCount + 1,
-        xp: player.xp + 15,
+        xp: player.xp + xpReward,
         gold: player.gold + 5,
         agility: player.agility + 1,
       );
@@ -290,10 +309,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _meditate() {
+    final xpReward = featureFlags.enabled("double_xp") ? 40 : 20;
+
     setState(() {
       player = player.copyWith(
         meditationCount: player.meditationCount + 1,
-        xp: player.xp + 20,
+        xp: player.xp + xpReward,
         gold: player.gold + 5,
         wisdom: player.wisdom + 1,
       );
@@ -522,6 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
         player: player,
         onClaimDailyReward: _claimDailyReward,
         onOpenInventory: _openInventory,
+        featureFlags: featureFlags,
       ),
       QuestsDashboardTab(
         quests: quests,

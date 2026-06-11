@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/cloud_save_service.dart';
 import 'state/session.dart';
+import 'services/feature_flag_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,11 +26,21 @@ class FitQuestApp extends StatefulWidget {
 class _FitQuestAppState extends State<FitQuestApp> {
   final Session _session = Session();
 
+  Future<PlayerData?>? _playerFuture;
+
   @override
   void initState() {
     super.initState();
 
     _session.addListener(() {
+      if (_session.status == SessionStatus.signedIn && _playerFuture == null) {
+        _playerFuture = _loadPlayer();
+      }
+
+      if (_session.status != SessionStatus.signedIn) {
+        _playerFuture = null;
+      }
+
       setState(() {});
     });
   }
@@ -41,8 +52,6 @@ class _FitQuestAppState extends State<FitQuestApp> {
   }
 
   Future<PlayerData?> _loadPlayer() async {
-    debugPrint('LOADING PLAYER');
-
     final api = _session.api!;
 
     final cloudSave = CloudSaveService(api);
@@ -52,7 +61,11 @@ class _FitQuestAppState extends State<FitQuestApp> {
       tenantId: _session.tenantId!,
     );
 
-    debugPrint('PLAYER RESULT: ${player?.heroClass}');
+    final featureFlags = FeatureFlagService(api);
+
+    await featureFlags.load(tenantId: _session.tenantId!);
+
+    debugPrint(featureFlags.flags.toString());
 
     return player;
   }
@@ -83,27 +96,35 @@ class _FitQuestAppState extends State<FitQuestApp> {
       ),
       home: _session.status != SessionStatus.signedIn
           ? LoginScreen(session: _session)
-          : FutureBuilder<PlayerData?>(
-              future: _loadPlayer(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                }
+          : Builder(
+              builder: (context) {
+                _playerFuture ??= _loadPlayer();
 
-                final player = snapshot.data;
+                return FutureBuilder<PlayerData?>(
+                  future: _playerFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
 
-                if (player == null || player.heroClass.trim().isEmpty) {
-                  return CharacterSetupScreen(
-                    session: _session,
-                    onCharacterCreated: () {
-                      setState(() {});
-                    },
-                  );
-                }
+                    final player = snapshot.data;
 
-                return HomeScreen(session: _session, player: player);
+                    if (player == null || player.heroClass.trim().isEmpty) {
+                      return CharacterSetupScreen(
+                        session: _session,
+                        onCharacterCreated: () {
+                          _playerFuture = null;
+
+                          setState(() {});
+                        },
+                      );
+                    }
+
+                    return HomeScreen(session: _session, player: player);
+                  },
+                );
               },
             ),
     );

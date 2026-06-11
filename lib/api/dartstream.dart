@@ -76,7 +76,8 @@ class DartstreamApi {
       tid = str(user, ['tenant_id', 'tenantId', 'active_tenant_id']);
     }
     if (tid == null && decoded is Map) {
-      tid = decoded['active_tenant_id'] as String? ??
+      tid =
+          decoded['active_tenant_id'] as String? ??
           decoded['tenant_id'] as String?;
     }
     if (uid == null || tid == null) {
@@ -101,6 +102,9 @@ class DartstreamApi {
       Uri.parse('${AppConfig.platformHost}/api/v1/platform/feature-flags'),
       headers: _baseHeaders(tenantId: tenantId),
     );
+
+    debugPrint(resp.body);
+
     return _jsonOrThrow(resp);
   }
 
@@ -139,9 +143,6 @@ class DartstreamApi {
     required String tenantId,
     String slotKey = 'flame',
   }) async {
-    debugPrint(
-      'DartstreamApi.loadSnapshot userId=$userId tenantId=$tenantId slotKey=$slotKey',
-    );
     final resp = await http.get(
       Uri.parse(
         '${AppConfig.experienceHost}/api/v1/experience/cloud-save/snapshot'
@@ -151,12 +152,8 @@ class DartstreamApi {
       ),
       headers: _baseHeaders(tenantId: tenantId),
     );
-    print('================ SNAPSHOT RESPONSE ================');
-print(resp.body);
-print('===================================================');
     if (resp.statusCode == 404) return null;
     final decoded = _jsonOrThrow(resp);
-    debugPrint('DartstreamApi.loadSnapshot decoded=$decoded');
     return decoded;
   }
 
@@ -179,11 +176,7 @@ print('===================================================');
       headers: _baseHeaders(tenantId: tenantId, json: true),
       body: jsonEncode({'payload': payload}),
     );
-    debugPrint(
-      'DartstreamApi.saveSnapshot raw status=${resp.statusCode} body=${resp.body}',
-    );
     final decoded = _jsonOrThrow(resp);
-    debugPrint('DartstreamApi.saveSnapshot decoded=$decoded');
     return decoded;
   }
 
