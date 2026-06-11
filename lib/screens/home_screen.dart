@@ -29,9 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedTab = 0;
 
   Future<void> savePlayer() async {
-    final api = widget.session.api!;
-
-    final cloudSave = CloudSaveService(api);
+    final cloudSave = CloudSaveService(widget.session.dartStream);
 
     await cloudSave.savePlayer(
       userId: widget.session.userId!,
@@ -41,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadFlags() async {
-    await featureFlags.load(tenantId: widget.session.tenantId!);
+    await featureFlags.load();
 
     if (mounted) {
       setState(() {});
@@ -156,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     player = widget.player;
-    featureFlags = FeatureFlagService(widget.session.api!);
+    featureFlags = FeatureFlagService(widget.session.dartStream);
 
     _loadFlags();
 

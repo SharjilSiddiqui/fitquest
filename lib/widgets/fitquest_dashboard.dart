@@ -54,23 +54,18 @@ class HomeDashboardTab extends StatelessWidget {
               else
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: featureFlags.flags.map<Widget>((flag) {
-                    final name = (flag["name"] ?? flag["key"] ?? "").toString();
-
-                    final enabled =
-                        flag["enabled"] == true || flag["status"] == "active";
-
+                  children: featureFlags.activeFlags().map<Widget>((flag) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       child: Row(
                         children: [
-                          Icon(
-                            enabled ? Icons.check_circle : Icons.cancel,
-                            color: enabled ? Colors.green : Colors.red,
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
                             size: 18,
                           ),
                           const SizedBox(width: 8),
-                          Text(name),
+                          Text(flag),
                         ],
                       ),
                     );

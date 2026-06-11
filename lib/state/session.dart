@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../api/dartstream.dart';
-import '../api/firebase_auth.dart';
+import 'package:dartstream_client/dartstream_client.dart';
+
+import '../services/dartstream_client_service.dart';
 
 enum SessionStatus { signedOut, signingIn, signedIn, error }
 
@@ -11,7 +12,9 @@ class Session extends ChangeNotifier {
   String? userId;
   String? tenantId;
   String? errorMessage;
-  DartstreamApi? api;
+  DartStreamSession? dartStreamSession;
+
+  DartStreamClientService get dartStream => DartStreamClientService.instance;
 
   Future<void> signIn(String email, String password) async {
     status = SessionStatus.signingIn;
@@ -19,23 +22,19 @@ class Session extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final auth = await FirebaseAuthRest.signIn(email, password);
-
-      final api = DartstreamApi(idToken: auth.idToken);
-
-      final ids = await api.signup();
+      final session = await dartStream.signIn(email: email, password: password);
 
       debugPrint('======================');
       debugPrint('LOGIN SUCCESS');
-      debugPrint('EMAIL: ${auth.email}');
-      debugPrint('USER ID: ${ids.userId}');
-      debugPrint('TENANT ID: ${ids.tenantId}');
+      debugPrint('EMAIL: ${session.email ?? email}');
+      debugPrint('USER ID: ${session.userId}');
+      debugPrint('TENANT ID: ${session.tenantId}');
       debugPrint('======================');
 
-      this.api = api;
-      this.email = auth.email;
-      userId = ids.userId;
-      tenantId = ids.tenantId;
+      dartStreamSession = session;
+      this.email = session.email ?? email;
+      userId = session.userId;
+      tenantId = session.tenantId;
 
       status = SessionStatus.signedIn;
     } catch (e) {
@@ -52,23 +51,19 @@ class Session extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final auth = await FirebaseAuthRest.signUp(email, password);
-
-      final api = DartstreamApi(idToken: auth.idToken);
-
-      final ids = await api.signup();
+      final session = await dartStream.signUp(email: email, password: password);
 
       debugPrint('======================');
       debugPrint('ACCOUNT CREATED');
-      debugPrint('EMAIL: ${auth.email}');
-      debugPrint('USER ID: ${ids.userId}');
-      debugPrint('TENANT ID: ${ids.tenantId}');
+      debugPrint('EMAIL: ${session.email ?? email}');
+      debugPrint('USER ID: ${session.userId}');
+      debugPrint('TENANT ID: ${session.tenantId}');
       debugPrint('======================');
 
-      this.api = api;
-      this.email = auth.email;
-      userId = ids.userId;
-      tenantId = ids.tenantId;
+      dartStreamSession = session;
+      this.email = session.email ?? email;
+      userId = session.userId;
+      tenantId = session.tenantId;
 
       status = SessionStatus.signedIn;
     } catch (e) {
@@ -85,7 +80,8 @@ class Session extends ChangeNotifier {
     userId = null;
     tenantId = null;
     errorMessage = null;
-    api = null;
+    dartStreamSession = null;
+    dartStream.clearSession();
     notifyListeners();
   }
 }

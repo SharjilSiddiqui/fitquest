@@ -15,9 +15,7 @@ class CharacterSetupScreen extends StatelessWidget {
   final VoidCallback onCharacterCreated;
 
   Future<void> _createCharacter(BuildContext context, String heroClass) async {
-    final api = session.api!;
-
-    final cloudSave = CloudSaveService(api);
+    final cloudSave = CloudSaveService(session.dartStream);
 
     final player = PlayerData(
       heroClass: heroClass,

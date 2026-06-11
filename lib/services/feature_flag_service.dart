@@ -1,75 +1,36 @@
-import '../api/dartstream.dart';
+import 'dartstream_client_service.dart';
 
 class FeatureFlagService {
-  FeatureFlagService(this.api);
+  FeatureFlagService(this.dartStream);
 
-  final DartstreamApi api;
+  final DartStreamClientService dartStream;
 
-  List<dynamic> flags = [];
+  final Set<String> _activeFlags = <String>{};
 
-  Future<void> load({required String tenantId}) async {
-    final response = await api.featureFlags(tenantId: tenantId);
+  List<String> get flags => activeFlags();
 
-    print("============== FEATURE FLAGS ==============");
-    print(response);
-    print(response.runtimeType);
+  Future<void> load({String? tenantId}) async {
+    final flags = await dartStream.client.platform.listFeatureFlags(
+      dartStream.requireSession,
+    );
 
-    if (response["flags"] is List) {
-      flags = response["flags"];
-    } else if (response["data"] is List) {
-      flags = response["data"];
-    } else {
-      flags = [];
-    }
-
-    print(flags);
-    print(flags.runtimeType);
-
-    if (flags.isNotEmpty) {
-      print(flags.first);
-      print(flags.first.runtimeType);
-    }
-
-    print("===========================================");
+    _activeFlags
+      ..clear()
+      ..addAll(flags.map(_activeFlagKey).whereType<String>());
   }
 
-  bool enabled(String key) {
-    for (final flag in flags) {
-      if (flag is! Map) continue;
+  bool enabled(String key) => _activeFlags.contains(key);
 
-      final isEnabled = flag["enabled"] == true || flag["status"] == "active";
+  List<String> activeFlags() => _activeFlags.toList(growable: false)..sort();
 
-      if (!isEnabled) continue;
+  String? _activeFlagKey(dynamic flag) {
+    if (flag is! Map) return null;
 
-      final flagKey = (flag["key"] ?? flag["flag_key"] ?? flag["flagKey"] ?? "")
-          .toString();
+    final enabled = flag["enabled"] == true || flag["status"] == "active";
+    if (!enabled) return null;
 
-      if (flagKey == key) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  List<String> activeFlags() {
-    final active = <String>[];
-
-    for (final flag in flags) {
-      if (flag is! Map) continue;
-
-      final isEnabled = flag["enabled"] == true || flag["status"] == "active";
-
-      if (!isEnabled) continue;
-
-      final flagKey = (flag["key"] ?? flag["flag_key"] ?? flag["flagKey"] ?? "")
-          .toString();
-
-      if (flagKey.isNotEmpty) {
-        active.add(flagKey);
-      }
-    }
-
-    return active;
+    final key = (flag["key"] ?? flag["flag_key"] ?? flag["flagKey"] ?? "")
+        .toString();
+    return key.isEmpty ? null : key;
   }
 }

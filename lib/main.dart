@@ -12,7 +12,6 @@ import 'services/feature_flag_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  debugPrint('Auth Host: ${dotenv.env['AUTH_HOST']}');
   runApp(const FitQuestApp());
 }
 
@@ -52,18 +51,16 @@ class _FitQuestAppState extends State<FitQuestApp> {
   }
 
   Future<PlayerData?> _loadPlayer() async {
-    final api = _session.api!;
-
-    final cloudSave = CloudSaveService(api);
+    final cloudSave = CloudSaveService(_session.dartStream);
 
     final player = await cloudSave.loadPlayer(
       userId: _session.userId!,
       tenantId: _session.tenantId!,
     );
 
-    final featureFlags = FeatureFlagService(api);
+    final featureFlags = FeatureFlagService(_session.dartStream);
 
-    await featureFlags.load(tenantId: _session.tenantId!);
+    await featureFlags.load();
 
     debugPrint(featureFlags.flags.toString());
 
