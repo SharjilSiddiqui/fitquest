@@ -1,6 +1,1 @@
-enum HeroClass {
-  warrior,
-  ranger,
-  monk,
-  mage,
-}
+enum HeroClass { warrior, ranger, monk, mage }

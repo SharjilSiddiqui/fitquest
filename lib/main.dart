@@ -60,8 +60,6 @@ class _FitQuestAppState extends State<FitQuestApp> {
 
     await featureFlags.load();
 
-    debugPrint(featureFlags.flags.toString());
-
     return player;
   }
 

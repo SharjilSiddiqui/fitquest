@@ -13,16 +13,6 @@ class FeatureFlagService {
     final flags = await dartStream.client.platform.listFeatureFlags(
       dartStream.requireSession,
     );
-    print("========== FLAGS ==========");
-    print(flags);
-    print(flags.runtimeType);
-
-    for (final f in flags) {
-      print("----------------");
-      print(f);
-      print(f.runtimeType);
-    }
-    print("===========================");
 
     _activeFlags
       ..clear()

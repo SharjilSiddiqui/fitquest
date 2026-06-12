@@ -1,5 +1,4 @@
 import 'dartstream_client_service.dart';
-import 'package:flutter/foundation.dart';
 
 class EventService {
   EventService(this.dartStream);
@@ -13,11 +12,6 @@ class EventService {
         eventType: eventType,
         payload: payload,
       );
-
-      debugPrint("EVENT SENT: $eventType");
-    } catch (e) {
-      debugPrint("EVENT FAILED");
-      debugPrint(e.toString());
-    }
+    } catch (_) {}
   }
 }

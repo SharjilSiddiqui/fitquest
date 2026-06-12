@@ -58,15 +58,15 @@ class CharacterSetupScreen extends StatelessWidget {
         player: player,
       );
 
-      debugPrint('SAVE SUCCESS');
+      if (!context.mounted) return;
 
-      if (context.mounted) {
-        onCharacterCreated();
-      }
-    } catch (e, stack) {
-      debugPrint('SAVE FAILED');
-      debugPrint(e.toString());
-      debugPrint(stack.toString());
+      onCharacterCreated();
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 

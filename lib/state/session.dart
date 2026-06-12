@@ -24,13 +24,6 @@ class Session extends ChangeNotifier {
     try {
       final session = await dartStream.signIn(email: email, password: password);
 
-      debugPrint('======================');
-      debugPrint('LOGIN SUCCESS');
-      debugPrint('EMAIL: ${session.email ?? email}');
-      debugPrint('USER ID: ${session.userId}');
-      debugPrint('TENANT ID: ${session.tenantId}');
-      debugPrint('======================');
-
       dartStreamSession = session;
       this.email = session.email ?? email;
       userId = session.userId;
@@ -52,13 +45,6 @@ class Session extends ChangeNotifier {
 
     try {
       final session = await dartStream.signUp(email: email, password: password);
-
-      debugPrint('======================');
-      debugPrint('ACCOUNT CREATED');
-      debugPrint('EMAIL: ${session.email ?? email}');
-      debugPrint('USER ID: ${session.userId}');
-      debugPrint('TENANT ID: ${session.tenantId}');
-      debugPrint('======================');
 
       dartStreamSession = session;
       this.email = session.email ?? email;
