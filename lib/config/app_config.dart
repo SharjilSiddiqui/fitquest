@@ -3,6 +3,4 @@ class AppConfig {
     'FIREBASE_API_KEY',
     defaultValue: '',
   );
-
-  static bool get hasFirebaseApiKey => firebaseApiKey.isNotEmpty;
 }

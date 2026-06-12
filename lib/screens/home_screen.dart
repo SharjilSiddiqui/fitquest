@@ -253,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _drinkWater() {
-    final xpReward = featureFlags.enabled("double_xp") ? 20 : 10;
+    final xpReward = featureFlags.enabled("doublexp") ? 20 : 10;
 
     setState(() {
       player = player.copyWith(
@@ -271,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _workout() {
-    final xpReward = featureFlags.enabled("double_xp") ? 50 : 25;
+    final xpReward = featureFlags.enabled("doublexp") ? 50 : 25;
 
     setState(() {
       player = player.copyWith(
@@ -289,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _walk() {
-    final xpReward = featureFlags.enabled("double_xp") ? 30 : 15;
+    final xpReward = featureFlags.enabled("doublexp") ? 30 : 15;
 
     setState(() {
       player = player.copyWith(
@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _meditate() {
-    final xpReward = featureFlags.enabled("double_xp") ? 40 : 20;
+    final xpReward = featureFlags.enabled("doublexp") ? 40 : 20;
 
     setState(() {
       player = player.copyWith(
