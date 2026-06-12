@@ -11,6 +11,7 @@ import '../services/achievement_service.dart';
 import 'inventory_screen.dart';
 import 'profile_screen.dart';
 import '../services/feature_flag_service.dart';
+import '../services/event_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.session, required this.player});
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late PlayerData player;
   late List<DailyQuest> quests;
   late FeatureFlagService featureFlags;
+  late EventService eventService;
   int _selectedTab = 0;
 
   Future<void> savePlayer() async {
@@ -155,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     player = widget.player;
     featureFlags = FeatureFlagService(widget.session.dartStream);
+    eventService = EventService(widget.session.dartStream);
 
     _loadFlags();
 
@@ -221,8 +224,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
             player = player.copyWith(xp: player.xp + updated.rewardXp);
 
+            eventService.track("quest_completed", {
+              "quest": updated.title,
+              "rewardXp": updated.rewardXp,
+            });
+
             if (LevelService.didLevelUp(oldXp, player.xp)) {
               player = player.copyWith(gold: player.gold + 50);
+
+              eventService.track("level_up", {
+                "level": LevelService.calculateLevel(player.xp),
+                "xp": player.xp,
+              });
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('🎉 LEVEL UP! +50 Gold')),
@@ -267,6 +280,13 @@ class _HomeScreenState extends State<HomeScreen> {
     updateQuest('Drink Water');
 
     updateAchievements();
+
+    eventService.track("drink_water", {
+      "xp": xpReward,
+      "gold": 5,
+      "waterCount": player.waterCount,
+    });
+
     savePlayer();
   }
 
@@ -285,6 +305,13 @@ class _HomeScreenState extends State<HomeScreen> {
     updateQuest('Workout');
 
     updateAchievements();
+
+    eventService.track("workout_completed", {
+      "xp": xpReward,
+      "gold": 10,
+      "workoutCount": player.workoutCount,
+    });
+
     savePlayer();
   }
 
@@ -303,6 +330,13 @@ class _HomeScreenState extends State<HomeScreen> {
     updateQuest('Walk');
 
     updateAchievements();
+
+    eventService.track("walk_completed", {
+      "xp": xpReward,
+      "gold": 5,
+      "walkCount": player.walkCount,
+    });
+
     savePlayer();
   }
 
@@ -321,6 +355,13 @@ class _HomeScreenState extends State<HomeScreen> {
     updateQuest('Meditate');
 
     updateAchievements();
+
+    eventService.track("meditation_completed", {
+      "xp": xpReward,
+      "gold": 5,
+      "meditationCount": player.meditationCount,
+    });
+
     savePlayer();
   }
 
@@ -352,6 +393,8 @@ class _HomeScreenState extends State<HomeScreen> {
       updateAchievements();
     });
 
+    eventService.track("daily_reward_claimed", {"day": rewardDay});
+
     savePlayer();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -379,6 +422,11 @@ class _HomeScreenState extends State<HomeScreen> {
       updateAchievements();
     });
 
+    eventService.track("item_purchased", {
+      "item": item.name,
+      "cost": item.cost,
+    });
+
     savePlayer();
     ScaffoldMessenger.of(
       context,
@@ -400,6 +448,8 @@ class _HomeScreenState extends State<HomeScreen> {
       updateAchievements();
     });
 
+    eventService.track("item_used", {"item": itemName, "xp": xpReward});
+
     savePlayer();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Used $itemName for +$xpReward XP.')),
@@ -418,6 +468,8 @@ class _HomeScreenState extends State<HomeScreen> {
         player = player.copyWith(equippedAccessory: itemName);
       }
     });
+
+    eventService.track("item_equipped", {"item": itemName});
 
     savePlayer();
     ScaffoldMessenger.of(
@@ -440,6 +492,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       updateAchievements();
     });
+
+    eventService.track("chest_opened", {"item": itemName});
 
     savePlayer();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -488,6 +542,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
         updateAchievements();
+        eventService.track("boss_defeated", {
+          "boss": boss.name,
+          "rewardXp": boss.rewardXp,
+          "rewardGold": boss.rewardGold,
+        });
       } else {
         player = player.copyWith(activeBossHp: nextHp);
       }
