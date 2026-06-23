@@ -3,13 +3,18 @@ import 'package:dartstream_client/dartstream_client.dart';
 import '../config.dart';
 
 class DartStreamClientService {
-  DartStreamClientService._();
+  DartStreamClientService({DartStreamClient? client})
+    : client =
+          client ??
+          DartStreamClient(
+            config: DartStreamConfig.dev(
+              firebaseApiKey: AppConfig.firebaseApiKey,
+            ),
+          );
 
-  static final DartStreamClientService instance = DartStreamClientService._();
+  static final DartStreamClientService instance = DartStreamClientService();
 
-  final DartStreamClient client = DartStreamClient(
-    config: DartStreamConfig.dev(firebaseApiKey: AppConfig.firebaseApiKey),
-  );
+  final DartStreamClient client;
 
   DartStreamSession? _session;
 
