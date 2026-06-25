@@ -4,7 +4,7 @@ import '../config.dart';
 
 class DartStreamClientService {
   DartStreamClientService({DartStreamClient? client})
-    : client =
+    : _baseClient =
           client ??
           DartStreamClient(
             config: DartStreamConfig.dev(
@@ -14,14 +14,16 @@ class DartStreamClientService {
 
   static final DartStreamClientService instance = DartStreamClientService();
 
-  final DartStreamClient client;
+  final DartStreamClient _baseClient;
 
-  DartStreamSession? _session;
+  DartStreamConnection? _connection;
 
-  DartStreamSession? get session => _session;
+  DartStreamClient get client => _connection?.client ?? _baseClient;
+
+  DartStreamSession? get session => _connection?.session;
 
   DartStreamSession get requireSession {
-    final activeSession = _session;
+    final activeSession = session;
     if (activeSession == null) {
       throw StateError('No active DartStream session.');
     }
@@ -32,32 +34,27 @@ class DartStreamClientService {
     required String email,
     required String password,
   }) async {
-    final firebaseSession = await client.auth.signInWithEmailPassword(
+    _connection = await DartStreamClient.signIn(
+      config: _baseClient.config,
       email: email,
       password: password,
     );
-    return _onboard(firebaseSession);
+    return _connection!.session;
   }
 
   Future<DartStreamSession> signUp({
     required String email,
     required String password,
   }) async {
-    final firebaseSession = await client.auth.createEmailPasswordSession(
+    _connection = await DartStreamClient.signUp(
+      config: _baseClient.config,
       email: email,
       password: password,
     );
-    return _onboard(firebaseSession);
-  }
-
-  Future<DartStreamSession> _onboard(
-    DartStreamFirebaseSession firebaseSession,
-  ) async {
-    _session = await client.auth.onboardFirebaseSession(firebaseSession);
-    return _session!;
+    return _connection!.session;
   }
 
   void clearSession() {
-    _session = null;
+    _connection = null;
   }
 }
