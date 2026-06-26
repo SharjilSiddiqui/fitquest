@@ -6,7 +6,6 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/cloud_save_service.dart';
 import 'state/session.dart';
-import 'services/feature_flag_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,10 +55,6 @@ class _FitQuestAppState extends State<FitQuestApp> {
       tenantId: _session.tenantId!,
     );
 
-    final featureFlags = FeatureFlagService(_session.dartStream);
-
-    await featureFlags.load();
-
     return player;
   }
 
@@ -70,17 +65,34 @@ class _FitQuestAppState extends State<FitQuestApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2E7D32),
+          secondary: const Color(0xFFEF6C00),
+          tertiary: const Color(0xFF1565C0),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF7FAF6),
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+          backgroundColor: Color(0xFFF7FAF6),
+        ),
         cardTheme: CardThemeData(
-          elevation: 1,
+          elevation: 2,
+          margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
+        navigationBarTheme: const NavigationBarThemeData(
+          height: 68,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

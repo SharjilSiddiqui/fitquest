@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/daily_quest.dart';
 import '../models/player_data.dart';
+import '../services/cloud_save_service.dart';
 import '../services/rpg_service.dart';
 import '../services/xp_service.dart';
 import '../services/feature_flag_service.dart';
@@ -13,6 +14,7 @@ class HomeDashboardTab extends StatelessWidget {
     required this.onClaimDailyReward,
     required this.onOpenInventory,
     required this.featureFlags,
+    required this.cloudPersistence,
   });
 
   final PlayerData player;
@@ -20,6 +22,7 @@ class HomeDashboardTab extends StatelessWidget {
   final VoidCallback onOpenInventory;
 
   final FeatureFlagService featureFlags;
+  final CloudPersistenceInfo? cloudPersistence;
 
   @override
   Widget build(BuildContext context) {
@@ -30,50 +33,6 @@ class HomeDashboardTab extends StatelessWidget {
     return DashboardScrollView(
       storageKey: 'home-dashboard',
       children: [
-        RpgCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.tune, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text(
-                    "Platform Flags",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              if (featureFlags.flags.isEmpty)
-                const Text(
-                  "No active flags",
-                  style: TextStyle(color: Colors.grey, fontSize: 15),
-                )
-              else
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: featureFlags.activeFlags().map<Widget>((flag) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(flag),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-            ],
-          ),
-        ),
         _HeroSummaryCard(
           heroClass: player.heroClass,
           level: level,
@@ -83,6 +42,8 @@ class HomeDashboardTab extends StatelessWidget {
           progress: progress,
           currentXp: currentXp,
         ),
+        PlatformFlagsCard(featureFlags: featureFlags),
+        CloudPersistenceCard(info: cloudPersistence),
         DailyRewardCard(player: player, onClaimDailyReward: onClaimDailyReward),
         const SectionTitle(title: 'Quick Stats'),
         GridView.count(
@@ -131,6 +92,7 @@ class QuestsDashboardTab extends StatelessWidget {
   const QuestsDashboardTab({
     super.key,
     required this.quests,
+    required this.doubleXpEnabled,
     required this.onDrinkWater,
     required this.onWorkout,
     required this.onWalk,
@@ -138,6 +100,7 @@ class QuestsDashboardTab extends StatelessWidget {
   });
 
   final List<DailyQuest> quests;
+  final bool doubleXpEnabled;
   final VoidCallback onDrinkWater;
   final VoidCallback onWorkout;
   final VoidCallback onWalk;
@@ -155,30 +118,36 @@ class QuestsDashboardTab extends StatelessWidget {
         ActivityActionCard(
           icon: Icons.water_drop,
           title: 'Drink Water',
-          reward: '+10 XP  +5 Gold',
+          reward: '+${_activityXp(10)} XP  +5 Gold',
+          boosted: doubleXpEnabled,
           onPressed: onDrinkWater,
         ),
         ActivityActionCard(
           icon: Icons.fitness_center,
           title: 'Workout',
-          reward: '+25 XP  +10 Gold',
+          reward: '+${_activityXp(25)} XP  +10 Gold',
+          boosted: doubleXpEnabled,
           onPressed: onWorkout,
         ),
         ActivityActionCard(
           icon: Icons.directions_walk,
           title: 'Walk',
-          reward: '+15 XP  +5 Gold',
+          reward: '+${_activityXp(15)} XP  +5 Gold',
+          boosted: doubleXpEnabled,
           onPressed: onWalk,
         ),
         ActivityActionCard(
           icon: Icons.self_improvement,
           title: 'Meditate',
-          reward: '+20 XP  +5 Gold',
+          reward: '+${_activityXp(20)} XP  +5 Gold',
+          boosted: doubleXpEnabled,
           onPressed: onMeditate,
         ),
       ],
     );
   }
+
+  int _activityXp(int baseXp) => doubleXpEnabled ? baseXp * 2 : baseXp;
 }
 
 class HeroDashboardTab extends StatelessWidget {
@@ -633,18 +602,140 @@ class _HeroSummaryCard extends StatelessWidget {
 }
 
 class RpgCard extends StatelessWidget {
-  const RpgCard({super.key, required this.child});
+  const RpgCard({super.key, required this.child, this.padding});
 
   final Widget child;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.12),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(padding: const EdgeInsets.all(18), child: child),
+      child: Padding(
+        padding: padding ?? const EdgeInsets.all(18),
+        child: child,
+      ),
     );
+  }
+}
+
+class PlatformFlagsCard extends StatelessWidget {
+  const PlatformFlagsCard({super.key, required this.featureFlags});
+
+  final FeatureFlagService featureFlags;
+
+  @override
+  Widget build(BuildContext context) {
+    final flags = featureFlags.activeFlags();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return RpgCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            icon: Icons.tune,
+            title: 'Platform Flags',
+            trailing: flags.isEmpty
+                ? null
+                : InfoChip(icon: Icons.flag, label: '${flags.length} active'),
+          ),
+          const SizedBox(height: 14),
+          if (flags.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'No active flags yet. Enable doublexp in DartStream Platform to boost quest rewards live.',
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final flag in flags)
+                  Chip(
+                    avatar: Icon(
+                      Icons.check_circle,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
+                    label: Text(flag),
+                    side: BorderSide.none,
+                    backgroundColor: flag == 'doublexp'
+                        ? colorScheme.primaryContainer
+                        : colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                      color: flag == 'doublexp'
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class CloudPersistenceCard extends StatelessWidget {
+  const CloudPersistenceCard({super.key, required this.info});
+
+  final CloudPersistenceInfo? info;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = info ?? CloudPersistenceInfo.connected();
+
+    return RpgCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            icon: Icons.cloud_done,
+            title: 'Cloud Persistence',
+            trailing: InfoChip(
+              icon: Icons.check_circle,
+              label: status.connected ? 'Connected' : 'Offline',
+            ),
+          ),
+          const SizedBox(height: 14),
+          StatListCard(
+            framed: false,
+            stats: [
+              StatItem(Icons.cloud_queue, 'Provider', status.provider),
+              if (status.lastSync != null)
+                StatItem(
+                  Icons.schedule,
+                  'Last Sync',
+                  _formatTime(status.lastSync!),
+                ),
+              StatItem(Icons.sync, 'Snapshot Status', status.snapshotStatus),
+              StatItem(Icons.folder_copy, 'Project', status.projectId),
+              StatItem(Icons.save, 'Slot', status.slotKey),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final suffix = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $suffix';
   }
 }
 
@@ -663,6 +754,38 @@ class SectionTitle extends StatelessWidget {
           context,
         ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
       ),
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        ),
+        ?trailing,
+      ],
     );
   }
 }
@@ -1073,18 +1196,23 @@ class ActivityActionCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.reward,
+    required this.boosted,
     required this.onPressed,
   });
 
   final IconData icon;
   final String title;
   final String reward;
+  final bool boosted;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.12),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: InkWell(
@@ -1093,7 +1221,17 @@ class ActivityActionCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              CircleAvatar(child: Icon(icon)),
+              CircleAvatar(
+                backgroundColor: boosted
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  icon,
+                  color: boosted
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -1106,11 +1244,20 @@ class ActivityActionCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(reward),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(reward),
+                        if (boosted)
+                          const InfoChip(icon: Icons.bolt, label: 'doublexp'),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              const Icon(Icons.add_circle),
+              Icon(Icons.add_circle, color: colorScheme.primary),
             ],
           ),
         ),
@@ -1128,22 +1275,25 @@ class StatItem {
 }
 
 class StatListCard extends StatelessWidget {
-  const StatListCard({super.key, required this.stats});
+  const StatListCard({super.key, required this.stats, this.framed = true});
 
   final List<StatItem> stats;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
-    return RpgCard(
-      child: Column(
-        children: [
-          for (var index = 0; index < stats.length; index++) ...[
-            _StatRow(item: stats[index]),
-            if (index != stats.length - 1) const Divider(height: 20),
-          ],
+    final content = Column(
+      children: [
+        for (var index = 0; index < stats.length; index++) ...[
+          _StatRow(item: stats[index]),
+          if (index != stats.length - 1) const Divider(height: 20),
         ],
-      ),
+      ],
     );
+
+    if (!framed) return content;
+
+    return RpgCard(child: content);
   }
 }
 

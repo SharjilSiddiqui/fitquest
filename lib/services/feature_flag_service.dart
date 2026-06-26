@@ -26,11 +26,22 @@ class FeatureFlagService {
   String? _activeFlagKey(dynamic flag) {
     if (flag is! Map) return null;
 
-    final enabled = flag["enabled"] == true || flag["status"] == "active";
+    final status = flag["status"]?.toString().toLowerCase();
+    final enabled =
+        flag["enabled"] == true ||
+        flag["isEnabled"] == true ||
+        flag["is_enabled"] == true ||
+        status == "active" ||
+        status == "enabled";
     if (!enabled) return null;
 
-    final key = (flag["key"] ?? flag["flag_key"] ?? flag["flagKey"] ?? "")
-        .toString();
+    final key =
+        (flag["key"] ??
+                flag["flag_key"] ??
+                flag["flagKey"] ??
+                flag["name"] ??
+                "")
+            .toString();
     return key.isEmpty ? null : key;
   }
 }

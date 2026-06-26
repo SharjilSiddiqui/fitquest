@@ -28,23 +28,47 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<DailyQuest> quests;
   late FeatureFlagService featureFlags;
   late EventService eventService;
+  CloudPersistenceInfo? _cloudPersistence;
   int _selectedTab = 0;
 
   Future<void> savePlayer() async {
     final cloudSave = CloudSaveService(widget.session.dartStream);
 
-    await cloudSave.savePlayer(
+    final status = await cloudSave.savePlayer(
       userId: widget.session.userId!,
       tenantId: widget.session.tenantId!,
       player: player,
     );
+
+    if (mounted) {
+      setState(() => _cloudPersistence = status);
+    }
   }
 
   Future<void> _loadFlags() async {
-    await featureFlags.load();
+    try {
+      await featureFlags.load();
+    } catch (_) {
+      // Keep the dashboard usable if the demo backend is temporarily unavailable.
+    }
 
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  Future<void> _loadCloudPersistence() async {
+    final cloudSave = CloudSaveService(widget.session.dartStream);
+    CloudPersistenceInfo status;
+
+    try {
+      status = await cloudSave.loadPersistenceInfo();
+    } catch (_) {
+      status = CloudPersistenceInfo.connected();
+    }
+
+    if (mounted) {
+      setState(() => _cloudPersistence = status);
     }
   }
 
@@ -160,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
     eventService = EventService(widget.session.dartStream);
 
     _loadFlags();
+    _loadCloudPersistence();
 
     checkDailyStreak();
 
@@ -601,9 +626,11 @@ class _HomeScreenState extends State<HomeScreen> {
         onClaimDailyReward: _claimDailyReward,
         onOpenInventory: _openInventory,
         featureFlags: featureFlags,
+        cloudPersistence: _cloudPersistence,
       ),
       QuestsDashboardTab(
         quests: quests,
+        doubleXpEnabled: featureFlags.enabled("doublexp"),
         onDrinkWater: _drinkWater,
         onWorkout: _workout,
         onWalk: _walk,
@@ -636,20 +663,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: IndexedStack(index: _selectedTab, children: tabs),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedTab,
-        onTap: (index) => setState(() => _selectedTab = index),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.task_alt), label: 'Quests'),
-          BottomNavigationBarItem(icon: Icon(Icons.shield), label: 'Hero'),
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedTab,
+        onDestinationSelected: (index) => setState(() => _selectedTab = index),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_filled), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.task_alt), label: 'Quests'),
+          NavigationDestination(icon: Icon(Icons.shield), label: 'Hero'),
+          NavigationDestination(
             icon: Icon(Icons.emoji_events),
             label: 'Achievements',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.storefront), label: 'Shop'),
-          BottomNavigationBarItem(
+          NavigationDestination(icon: Icon(Icons.storefront), label: 'Shop'),
+          NavigationDestination(
             icon: Icon(Icons.sports_martial_arts),
             label: 'Battle',
           ),
