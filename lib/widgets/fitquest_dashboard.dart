@@ -868,25 +868,35 @@ class DailyRewardCard extends StatelessWidget {
     final claimed = RpgService.isRewardClaimedToday(player);
 
     return RpgCard(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-          child: Icon(rewardDay == 7 ? Icons.inventory_2 : Icons.paid),
-        ),
-        title: Text(
-          'Daily Reward: Day $rewardDay',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          RpgService.rewardLabelForDay(rewardDay),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: FilledButton(
-          onPressed: claimed ? null : onClaimDailyReward,
-          child: Text(claimed ? 'Claimed' : 'Claim'),
-        ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            child: Icon(rewardDay == 7 ? Icons.inventory_2 : Icons.paid),
+          ),
+          const SizedBox(width: 16),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Daily Reward: Day $rewardDay',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(RpgService.rewardLabelForDay(rewardDay)),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          FilledButton(
+            onPressed: claimed ? null : onClaimDailyReward,
+            child: Text(claimed ? 'Claimed' : 'Claim'),
+          ),
+        ],
       ),
     );
   }
