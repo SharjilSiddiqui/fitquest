@@ -1,14 +1,16 @@
 # 🏆 FitQuest
 
-FitQuest is a gamified fitness RPG built with Flutter and DartStream Cloud Services.
+FitQuest is a gamified fitness RPG built with **Flutter** and **DartStream Cloud Services**.
 
-Instead of simply tracking habits, FitQuest transforms healthy activities into RPG progression. Players create a hero, complete daily quests, earn XP and Gold, maintain streaks, unlock achievements, collect items, equip gear, battle bosses, and level up through real-world healthy habits.
+Instead of simply tracking habits, FitQuest transforms healthy activities into RPG progression. Players create a hero, complete daily quests, earn XP and Gold, maintain streaks, unlock achievements, and persist their progress using DartStream Cloud Services.
+
+FitQuest serves as a complete reference application demonstrating the official **DartStream Flutter SDK**, Firebase Authentication, Cloud Save, Feature Flags, Reactive Events, OAuth2 Client Credentials, CI/CD, and Firebase Hosting.
 
 ---
 
-## ✨ Features
+# ✨ Features
 
-### 🛡 Hero Classes
+## 🛡 Hero Classes
 
 Choose your hero class:
 
@@ -21,55 +23,37 @@ Hero selection is persisted using DartStream Cloud Save.
 
 ---
 
-### ⚡ RPG Progression System
+## ⚡ RPG Progression
 
-Earn XP by completing fitness activities.
+Earn XP and Gold by completing real-world healthy activities.
 
-| Activity       | XP Reward |
-| -------------- | --------- |
-| 💧 Drink Water | +10 XP    |
-| 🏋 Workout     | +25 XP    |
-| 🚶 Walk        | +15 XP    |
-| 🧘 Meditate    | +20 XP    |
+| Activity       |  XP | Gold |
+| -------------- | --: | ---: |
+| 💧 Drink Water |  10 |    5 |
+| 🏋 Workout     |  25 |   10 |
+| 🚶 Walk        |  15 |    5 |
+| 🧘 Meditate    |  20 |    5 |
 
-#### Level Formula
+### Level Formula
 
 ```dart
-Level = (XP ~/ 100) + 1;
+level = (xp ~/ 100) + 1;
 ```
 
-| XP   | Level |
-| ---- | ----- |
-| 0    | 1     |
-| 100  | 2     |
-| 500  | 6     |
-| 1000 | 11    |
+Example:
+
+|   XP | Level |
+| ---: | ----: |
+|    0 |     1 |
+|  100 |     2 |
+|  500 |     6 |
+| 1000 |    11 |
 
 ---
 
-### 💰 Gold System
+## 📅 Daily Quests
 
-Earn gold alongside XP.
-
-| Activity       | Gold Reward |
-| -------------- | ----------- |
-| 💧 Drink Water | +5 Gold     |
-| 🏋 Workout     | +10 Gold    |
-| 🚶 Walk        | +5 Gold     |
-| 🧘 Meditate    | +5 Gold     |
-
-Gold can be used for:
-
-- Shop purchases
-- Equipment
-- Inventory items
-- Future hero upgrades
-
----
-
-### 📅 Daily Quests
-
-Current quests:
+Current quests include:
 
 - Drink Water ×5
 - Workout ×1
@@ -79,32 +63,26 @@ Current quests:
 Features:
 
 - Persistent progress
-- Automatic daily reset
-- Bonus XP rewards
-- Cloud-saved state
+- Daily reset
+- XP rewards
+- Cloud synchronization
 
 ---
 
-### 🔥 Streak System
+## 🔥 Daily Streaks
 
 Track consecutive active days.
 
 Features:
 
-- Daily streak tracking
-- Automatic streak increment
-- Streak reset after inactivity
-- Future streak rewards
-
-Example:
-
-```text
-🔥 Streak: 14 Days
-```
+- Automatic streak tracking
+- Persistent streak storage
+- Daily reward support
+- Future streak bonuses
 
 ---
 
-### 🏆 Achievement System
+## 🏆 Achievement System
 
 Achievements unlock automatically based on player progress.
 
@@ -119,319 +97,315 @@ Examples:
 
 ---
 
-### 🎁 Daily Rewards
+## 👹 Boss Battles
 
-Players can claim daily rewards.
-
-Reward examples:
-
-- Gold
-- XP
-- Potions
-- Equipment
-
----
-
-### 🎒 Inventory System
-
-Supported item types:
-
-#### Consumables
-
-- Small XP Potion
-- Large XP Potion
-- Gold Boost
-
-#### Equipment
-
-- Weapons
-- Armor
-- Accessories
-
-Features:
-
-- Inventory persistence
-- Item usage
-- Equipment management
-- Cloud synchronization
-
----
-
-### ⚔ Equipment System
-
-Equipment slots:
-
-- Weapon
-- Armor
-- Accessory
-
-Example:
-
-```text
-Weapon: Iron Sword
-Armor: Steel Armor
-Accessory: Magic Ring
-```
-
----
-
-### 🛒 Shop System
-
-Players can spend gold on:
-
-- XP Potions
-- Weapons
-- Armor
-- Accessories
-
----
-
-### 👹 Boss Battle System
-
-Example bosses:
-
-- Forest Troll
-- Goblin King
-- Shadow Beast
+Battle powerful enemies and earn rewards.
 
 Possible rewards:
 
-```text
-+200 XP
-+100 Gold
-Rare Equipment
-```
+- XP
+- Gold
+- Equipment
+- Achievement Progress
 
 ---
 
-## ☁ DartStream Integration
+## 🎒 Inventory
 
-FitQuest uses DartStream Cloud Services for authentication and cloud persistence.
+Inventory supports:
 
-### Authentication
+- Consumables
+- Equipment
+- Future RPG items
 
-Used for:
+Inventory is synchronized using DartStream Cloud Save.
+
+---
+
+# ☁ DartStream Integration
+
+FitQuest demonstrates multiple DartStream services.
+
+## 🔐 Authentication
+
+Uses the official **dartstream_client** SDK together with Firebase Authentication.
+
+Features:
 
 - User Registration
 - User Login
-- Session Management
-- Account Persistence
+- Session Onboarding
+- Session Persistence
 
-Files:
+---
 
-```text
-lib/api/firebase_auth.dart
-lib/state/session.dart
-```
+## 🚩 Platform Service
 
-### Cloud Save
+Uses DartStream Platform APIs for:
 
-Used for:
+- Feature Flags
+
+Feature Flags actively influence application behaviour and gameplay.
+
+---
+
+## ☁ Experience Service
+
+Uses DartStream Experience APIs for:
+
+- Cloud Save
+- Character Persistence
+- Inventory
+- Player Progress
+
+Cloud Save stores:
 
 - Hero Class
 - XP
 - Gold
-- Streak
 - Daily Quests
-- Daily Rewards
+- Streak
 - Inventory
-- Equipment
 - Achievements
 - Boss Progress
 
-Files:
+---
+
+## ⚡ Reactive Service
+
+Uses DartStream Reactive APIs for gameplay events.
+
+Current events include:
+
+- Character Created
+- Gameplay Progression Events
+
+---
+
+# 🔐 OAuth2 Machine-to-Machine Demo
+
+The repository includes a standalone OAuth2 CLI demonstrating the **Client Credentials Grant**.
+
+Location:
 
 ```text
-lib/services/cloud_save_service.dart
-lib/api/dartstream.dart
+bin/oauth2_deepdive.dart
 ```
+
+The CLI demonstrates:
+
+- OAuth2 Client Credentials
+- JWT Inspection
+- OAuth2 Bearer Authentication
+- Live Platform API Access
+- Machine-to-Machine Authentication
+
+The OAuth2 CLI is completely separate from the Flutter application and **is not deployed** to Firebase Hosting.
 
 ---
 
-## 🌐 API Endpoints Used
-
-### Authentication
-
-#### Register User
-
-```http
-POST {AUTH_HOST}/register
-```
-
-#### Login User
-
-```http
-POST {AUTH_HOST}/login
-```
-
-#### Refresh Session
-
-```http
-POST {AUTH_HOST}/refresh
-```
-
-### Cloud Save
-
-#### Save Snapshot
-
-```http
-POST {API_HOST}/snapshot
-```
-
-#### Load Snapshot
-
-```http
-GET {API_HOST}/snapshot
-```
-
-#### Update Snapshot
-
-```http
-PUT {API_HOST}/snapshot
-```
-
----
-
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
-lib/
-
-├── api/
-│   ├── dartstream.dart
-│   └── firebase_auth.dart
+.
+├── bin/
+│   └── oauth2_deepdive.dart
 │
-├── models/
-│   ├── player_data.dart
-│   ├── daily_quest.dart
-│   └── hero_class.dart
+├── lib/
+│   ├── config/
+│   ├── models/
+│   ├── screens/
+│   ├── services/
+│   ├── state/
+│   ├── widgets/
+│   └── main.dart
 │
-├── screens/
-│   ├── login_screen.dart
-│   ├── register_screen.dart
-│   ├── character_setup_screen.dart
-│   ├── home_screen.dart
-│   ├── inventory_screen.dart
-│   └── profile_screen.dart
+├── test/
+│   ├── cloud_save_service_test.dart
+│   └── event_service_test.dart
 │
-├── services/
-│   ├── cloud_save_service.dart
-│   ├── xp_service.dart
-│   ├── level_service.dart
-│   ├── achievement_service.dart
-│   └── battle_service.dart
+├── web/
 │
-├── state/
-│   └── session.dart
+├── .github/
+│   └── workflows/
+│       └── flutter.yml
 │
-├── widgets/
-│   └── fitquest_dashboard.dart
-│
-└── main.dart
+├── firebase.json
+├── .firebaserc
+└── pubspec.yaml
 ```
 
 ---
 
-## 🛠 Tech Stack
+# 🛠 Tech Stack
 
-### Frontend
+## Frontend
 
 - Flutter
 - Dart
 - Material Design 3
 
-### Backend
+## Backend
 
 - DartStream Cloud Services
 
-### Authentication
+## Authentication
 
-- Firebase Authentication REST API
-- DartStream Authentication Layer
+- Firebase Authentication
+- dartstream_client SDK
 
-### Persistence
+## Cloud Services
 
-- DartStream Cloud Save
-- Snapshot Storage
+- Platform
+- Experience
+- Reactive
+
+## Hosting
+
+- Firebase Hosting
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
-### Install Dependencies
+## Install Dependencies
 
 ```bash
 flutter pub get
 ```
 
-### Environment Variables
+---
 
-Create a `.env` file:
+## Run Locally
+
+```bash
+flutter run \
+  -d chrome \
+  --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+```
+
+---
+
+## Build Web
+
+```bash
+flutter build web \
+  --release \
+  --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+```
+
+---
+
+## OAuth2 CLI
+
+Create a local `.env` file (never commit it):
 
 ```env
-AUTH_HOST=
-API_HOST=
-FIREBASE_API_KEY=
+OAUTH2_CLIENT_ID=
+OAUTH2_CLIENT_SECRET=
+
+API_BILLING=https://dev-apibilling.dartstream.io
+API_PLATFORM=https://dev-apiplatform.dartstream.io
+API_EXPERIENCE=https://dev-apiexperience.dartstream.io
+API_REACTIVE=https://dev-apireactive.dartstream.io
+API_PERSISTENCE=https://dev-apipersistence.dartstream.io
 ```
 
-### Run Application
+Export the variables:
 
 ```bash
-flutter run
+set -a
+source .env
+set +a
 ```
 
-### Run On Chrome
+Run the OAuth2 Deep Dive:
 
 ```bash
-flutter run -d chrome
-```
-
-### Run On Android Emulator
-
-```bash
-flutter emulators --launch Pixel_9_API_36
-flutter run
+dart run bin/oauth2_deepdive.dart
 ```
 
 ---
 
-## 🗺 Roadmap
+# 🧪 Testing
 
-### Completed
+Run unit tests:
 
-- Hero Classes
-- XP System
-- Gold System
-- Daily Quests
-- Streak Tracking
-- Cloud Save
-- Achievement System
-- Inventory
-- Equipment
-- Shop
-- Boss Battles
+```bash
+flutter test
+```
 
-### Future Enhancements
+Run static analysis:
 
-- Avatar Customization
-- PvP Battles
-- Guild System
-- Global Leaderboards
-- Seasonal Events
-- Multiplayer Challenges
-- AI Fitness Recommendations
+```bash
+flutter analyze
+```
+
+Verify a production web build:
+
+```bash
+flutter build web \
+  --dart-define=FIREBASE_API_KEY=dummy
+```
 
 ---
 
-## 👨‍💻 Author
+# ⚙ Continuous Integration
 
-Built with Flutter and DartStream Cloud Services as a learning project focused on:
+GitHub Actions automatically runs:
 
-- Mobile Development
-- Cloud Persistence
-- Gamification
-- RPG Mechanics
-- Fitness Tracking
-- DartStream APIs
+- flutter pub get
+- flutter analyze
+- flutter test
+- flutter build web
 
-FitQuest demonstrates how healthy habits can be transformed into an engaging RPG progression experience.
+on every push and pull request.
+
+---
+
+# 🌍 Deployment
+
+Build:
+
+```bash
+flutter build web \
+  --release \
+  --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+```
+
+Deploy to Firebase Hosting:
+
+```bash
+firebase deploy --only hosting:fitquest
+```
+
+---
+
+# 🔒 Security
+
+- Firebase API Keys are supplied using `--dart-define`.
+- OAuth2 Client Secrets are **never** embedded into the Flutter application.
+- OAuth2 Client Secrets are only used by the standalone CLI.
+- No secrets should be committed to Git.
+
+---
+
+# 📚 What This Sample Demonstrates
+
+- ✅ Flutter + DartStream SDK
+- ✅ Firebase Authentication
+- ✅ Feature Flags
+- ✅ Cloud Save
+- ✅ Reactive Event Tracking
+- ✅ OAuth2 Client Credentials
+- ✅ Firebase Hosting
+- ✅ GitHub Actions CI
+- ✅ Unit Testing with MockClient
+
+---
+
+# 👨‍💻 Author
+
+**Sharjil Siddiqui**
+
+FitQuest is a production-quality reference application demonstrating modern Flutter development with the DartStream SDK. It showcases authentication, cloud persistence, feature flags, reactive events, OAuth2 machine-to-machine authentication, CI/CD, automated testing, and Firebase Hosting through a complete RPG-inspired fitness application.
