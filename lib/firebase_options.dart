@@ -53,12 +53,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC5ImF7HStDsFZwIEcpvBzqblnPolBZHxk',
-    appId: "1:420891456414:web:3d26dbcd289a7fa1a81c8f",
-    messagingSenderId: '420891456414',
-    projectId: 'aortem-sample-apps',
-    authDomain: 'aortem-sample-apps.firebaseapp.com',
-    storageBucket: 'aortem-sample-apps.firebasestorage.app',
-    measurementId: 'G-XLQK10MSWF',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_APP_ID'),
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    authDomain: String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    measurementId: String.fromEnvironment('FIREBASE_MEASUREMENT_ID'),
   );
 }
