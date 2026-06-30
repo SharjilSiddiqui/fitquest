@@ -19,7 +19,13 @@ class SpawnManager {
   double _collectibleTimer = 0.6;
   double _obstacleTimer = 1.2;
 
-  SpawnBatch tick(double delta, double distance, double viewportWidth) {
+  SpawnBatch tick(
+    double delta,
+    double distance,
+    double viewportWidth, {
+    bool denseObstacles = false,
+    bool rareLoot = false,
+  }) {
     _collectibleTimer -= delta;
     _obstacleTimer -= delta;
 
@@ -27,24 +33,30 @@ class SpawnManager {
     final obstacles = <RunObstacle>[];
 
     if (_collectibleTimer <= 0) {
-      collectibles.add(_spawnCollectible(viewportWidth));
+      collectibles.add(_spawnCollectible(viewportWidth, rareLoot: rareLoot));
       _collectibleTimer = _collectibleInterval(distance);
     }
 
     if (_obstacleTimer <= 0) {
       obstacles.add(_spawnObstacle(viewportWidth, distance));
-      if (distance >= 500 && _random.nextDouble() < 0.28) {
+      final pairChance = denseObstacles ? 0.44 : 0.28;
+      if (distance >= 500 && _random.nextDouble() < pairChance) {
         obstacles.add(_spawnObstacle(viewportWidth + 150, distance));
       }
-      _obstacleTimer = _obstacleInterval(distance);
+      _obstacleTimer = _obstacleInterval(distance, denseObstacles);
     }
 
     return SpawnBatch(collectibles: collectibles, obstacles: obstacles);
   }
 
-  RunCollectible _spawnCollectible(double viewportWidth) {
+  RunCollectible _spawnCollectible(
+    double viewportWidth, {
+    required bool rareLoot,
+  }) {
     final roll = _random.nextDouble();
-    final type = roll < 0.28
+    final type = rareLoot
+        ? _rareLootCollectible(roll)
+        : roll < 0.28
         ? CollectibleType.water
         : roll < 0.46
         ? CollectibleType.coin
@@ -63,6 +75,20 @@ class SpawnManager {
       x: viewportWidth + 80 + _random.nextDouble() * 80,
       y: y,
     );
+  }
+
+  CollectibleType _rareLootCollectible(double roll) {
+    return roll < 0.22
+        ? CollectibleType.water
+        : roll < 0.34
+        ? CollectibleType.coin
+        : roll < 0.48
+        ? CollectibleType.xpOrb
+        : roll < 0.72
+        ? CollectibleType.food
+        : roll < 0.90
+        ? CollectibleType.shield
+        : CollectibleType.potion;
   }
 
   RunObstacle _spawnObstacle(double viewportWidth, double distance) {
@@ -114,12 +140,17 @@ class SpawnManager {
     return _lerp(0.78, 1.24, _random.nextDouble());
   }
 
-  double _obstacleInterval(double distance) {
+  double _obstacleInterval(double distance, bool denseObstacles) {
     if (distance < 200) return _lerp(1.85, 2.55, _random.nextDouble());
     if (distance < 500) return _lerp(1.35, 2.05, _random.nextDouble());
 
     final pressure = ((distance - 500) / 2200).clamp(0.0, 0.35);
-    return _lerp(1.02 - pressure, 1.62 - pressure, _random.nextDouble());
+    final density = denseObstacles ? 0.24 : 0.0;
+    return _lerp(
+      1.02 - pressure - density,
+      1.62 - pressure - density,
+      _random.nextDouble(),
+    );
   }
 
   double _lerp(double a, double b, double t) => a + (b - a) * t;

@@ -46,7 +46,9 @@ class RunnerEngine extends ChangeNotifier {
   double _viewportWidth = GameConstants.defaultWorldWidth;
   double _saveTimer = 0;
   double _slideTimer = 0;
+  double _regenTimer = 0;
   List<RunnerEvent> _pendingEvents = <RunnerEvent>[];
+  Map<String, bool> _intellitoggleFlags = const {};
 
   late AdventureGameState state;
 
@@ -65,9 +67,11 @@ class RunnerEngine extends ChangeNotifier {
       bestCombo: preservedBestCombo,
     );
     state = next.state;
+    updateIntellitoggleFlags(_intellitoggleFlags);
     _pendingEvents = <RunnerEvent>[];
     _saveTimer = 0;
     _slideTimer = 0;
+    _regenTimer = 0;
     notifyListeners();
   }
 
@@ -94,9 +98,16 @@ class RunnerEngine extends ChangeNotifier {
     _viewportWidth = width;
   }
 
+  void updateIntellitoggleFlags(Map<String, bool> flags) {
+    _intellitoggleFlags = Map<String, bool>.unmodifiable(flags);
+  }
+
   void jump() {
     if (state.paused || state.gameOver) return;
-    state.player.jump();
+    final jumpVelocity = _intellitoggleFlags['low-gravity'] == true
+        ? GameConstants.jumpVelocity * 1.3
+        : GameConstants.jumpVelocity;
+    state.player.jump(velocity: jumpVelocity);
     notifyListeners();
   }
 
@@ -121,12 +132,31 @@ class RunnerEngine extends ChangeNotifier {
     _slideTimer = (_slideTimer - delta).clamp(0, double.infinity);
 
     final player = state.player;
+    var stamina = state.stamina;
+    if (_intellitoggleFlags['infinite-stamina'] == true) {
+      stamina = 100;
+    } else {
+      stamina = (stamina - delta * 1.8).clamp(0, 100);
+    }
+
+    _regenTimer += delta;
+    if (_intellitoggleFlags['health-regen'] == true && _regenTimer >= 3) {
+      _regenTimer = 0;
+      player.heal(1);
+    }
+
     if (_slideTimer == 0) {
       player.stopSlide();
     }
     player.tick(delta);
 
-    final batch = _spawnManager.tick(delta, state.distance, _viewportWidth);
+    final batch = _spawnManager.tick(
+      delta,
+      state.distance,
+      _viewportWidth,
+      denseObstacles: _intellitoggleFlags['enemy-density'] == true,
+      rareLoot: _intellitoggleFlags['rare-loot'] == true,
+    );
     var collectibles = [
       ...state.collectibles.map((item) => item.move(dx)),
       ...batch.collectibles,
@@ -141,6 +171,7 @@ class RunnerEngine extends ChangeNotifier {
     var itemsCollected = state.itemsCollected;
     var combo = state.combo;
     var bestCombo = state.bestCombo;
+    var score = state.score;
 
     final collectedIds = <int>{};
     for (final collectible in collectibles) {
@@ -152,6 +183,7 @@ class RunnerEngine extends ChangeNotifier {
       xpEarned += xp;
       goldEarned += collectible.gold;
       itemsCollected += 1;
+      score += _intellitoggleFlags['double-xp'] == true ? 2 : 1;
       combo += 1;
       bestCombo = combo > bestCombo ? combo : bestCombo;
       _pendingEvents.add(
@@ -213,6 +245,10 @@ class RunnerEngine extends ChangeNotifier {
       itemsCollected: itemsCollected,
       combo: combo,
       bestCombo: bestCombo,
+      score: score,
+      stamina: stamina,
+      currentSpeed: speed,
+      fps: delta > 0 ? 1 / delta : state.fps,
       gameOver: gameOver,
       timeSeconds: state.timeSeconds + delta,
     );

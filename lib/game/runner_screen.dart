@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/player_data.dart';
+import '../intellitoggle/state/intellitoggle_provider.dart';
 import '../services/feature_flag_service.dart';
 import 'collectible.dart';
 import 'game_constants.dart';
@@ -18,6 +19,7 @@ class AdventureRunScreen extends StatefulWidget {
     super.key,
     required this.player,
     required this.featureFlags,
+    required this.intellitoggle,
     required this.active,
     required this.onPlayerChanged,
     required this.onSave,
@@ -25,6 +27,7 @@ class AdventureRunScreen extends StatefulWidget {
 
   final PlayerData player;
   final FeatureFlagService featureFlags;
+  final IntellitoggleProvider intellitoggle;
   final bool active;
   final ValueChanged<PlayerData> onPlayerChanged;
   final Future<void> Function(PlayerData player) onSave;
@@ -50,6 +53,8 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
     WidgetsBinding.instance.addObserver(this);
     _currentPlayer = widget.player;
     _engine = _createEngine();
+    _engine.updateIntellitoggleFlags(widget.intellitoggle.activeMap());
+    widget.intellitoggle.addListener(_handleIntellitoggleChanged);
     _ticker =
         AnimationController(vsync: this, duration: const Duration(days: 1))
           ..addListener(_tick)
@@ -64,6 +69,11 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
   void didUpdateWidget(covariant AdventureRunScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     _currentPlayer = widget.player;
+    if (oldWidget.intellitoggle != widget.intellitoggle) {
+      oldWidget.intellitoggle.removeListener(_handleIntellitoggleChanged);
+      widget.intellitoggle.addListener(_handleIntellitoggleChanged);
+    }
+    _engine.updateIntellitoggleFlags(widget.intellitoggle.activeMap());
     if (!widget.active) {
       if (!_engine.state.paused) {
         _pausedBecauseInactive = true;
@@ -88,6 +98,7 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
   @override
   void dispose() {
     _saveSnapshot(finalize: false);
+    widget.intellitoggle.removeListener(_handleIntellitoggleChanged);
     WidgetsBinding.instance.removeObserver(this);
     _ticker
       ..removeListener(_tick)
@@ -103,6 +114,11 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
       extensionFlags: widget.featureFlags.activeFlags(),
       bestCombo: _currentPlayer.bestRunCombo,
     );
+  }
+
+  void _handleIntellitoggleChanged() {
+    _engine.updateIntellitoggleFlags(widget.intellitoggle.activeMap());
+    if (mounted) setState(() {});
   }
 
   void _tick() {
@@ -293,12 +309,19 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
                               _RunnerWorld(
                                 state: _engine.state,
                                 viewportWidth: viewportWidth,
+                                nightMode: widget.intellitoggle.enabled(
+                                  'night-mode',
+                                ),
                               ),
                               Positioned.fill(
                                 child: AdventureHud(
                                   state: _engine.state,
                                   player: _currentPlayer,
                                   onPause: _engine.togglePause,
+                                  showDebug: widget.intellitoggle.enabled(
+                                    'debug-hud',
+                                  ),
+                                  activeFlags: widget.intellitoggle.activeMap(),
                                 ),
                               ),
                               if (_engine.state.paused)
@@ -379,10 +402,15 @@ class _AdventureHeader extends StatelessWidget {
 }
 
 class _RunnerWorld extends StatelessWidget {
-  const _RunnerWorld({required this.state, required this.viewportWidth});
+  const _RunnerWorld({
+    required this.state,
+    required this.viewportWidth,
+    required this.nightMode,
+  });
 
   final AdventureGameState state;
   final double viewportWidth;
+  final bool nightMode;
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +421,11 @@ class _RunnerWorld extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
-            _Background(distance: state.distance, viewportWidth: viewportWidth),
+            _Background(
+              distance: state.distance,
+              viewportWidth: viewportWidth,
+              nightMode: nightMode,
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -418,10 +450,15 @@ class _RunnerWorld extends StatelessWidget {
 }
 
 class _Background extends StatelessWidget {
-  const _Background({required this.distance, required this.viewportWidth});
+  const _Background({
+    required this.distance,
+    required this.viewportWidth,
+    required this.nightMode,
+  });
 
   final double distance;
   final double viewportWidth;
+  final bool nightMode;
 
   @override
   Widget build(BuildContext context) {
@@ -436,14 +473,29 @@ class _Background extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  colorScheme.tertiaryContainer.withValues(alpha: 0.38),
-                  colorScheme.surface,
-                ],
+                colors: nightMode
+                    ? const [Color(0xFF101826), Color(0xFF263238)]
+                    : [
+                        colorScheme.tertiaryContainer.withValues(alpha: 0.38),
+                        colorScheme.surface,
+                      ],
               ),
             ),
           ),
         ),
+        if (nightMode) ...[
+          const Positioned(
+            top: 34,
+            right: 72,
+            child: Icon(Icons.nightlight_round, color: Color(0xFFFFF8E1), size: 44),
+          ),
+          for (var index = 0; index < 14; index++)
+            Positioned(
+              left: (index * 83 + offset.abs()) % viewportWidth,
+              top: 26 + (index % 5) * 22,
+              child: const Icon(Icons.star, color: Color(0xFFFFFDE7), size: 10),
+            ),
+        ],
         for (var index = 0; index < (viewportWidth / 180).ceil() + 2; index++)
           Positioned(
             left: offset + index * 180,
@@ -451,12 +503,19 @@ class _Background extends StatelessWidget {
             child: Icon(
               Icons.park,
               size: 72,
-              color: colorScheme.primary.withValues(alpha: 0.22),
+              color: nightMode
+                  ? const Color(0xFF90A4AE).withValues(alpha: 0.30)
+                  : colorScheme.primary.withValues(alpha: 0.22),
             ),
           ),
       ],
     );
   }
+}
+
+bool _isNightMode(BuildContext context) {
+  final state = context.findAncestorStateOfType<_AdventureRunScreenState>();
+  return state?.widget.intellitoggle.enabled('night-mode') ?? false;
 }
 
 class _HeroSprite extends StatelessWidget {

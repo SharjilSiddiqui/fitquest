@@ -9,11 +9,15 @@ class AdventureHud extends StatelessWidget {
     required this.state,
     required this.player,
     required this.onPause,
+    required this.showDebug,
+    required this.activeFlags,
   });
 
   final AdventureGameState state;
   final PlayerData player;
   final VoidCallback onPause;
+  final bool showDebug;
+  final Map<String, bool> activeFlags;
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +40,32 @@ class AdventureHud extends StatelessWidget {
             label: '${player.streak} day streak',
           ),
           _HudChip(icon: Icons.bubble_chart, label: 'Combo ${state.combo}'),
+          _HudChip(
+            icon: Icons.speed,
+            label: '${state.stamina.floor()} stamina',
+          ),
           IconButton.filledTonal(
             onPressed: onPause,
             icon: Icon(state.paused ? Icons.play_arrow : Icons.pause),
             tooltip: state.paused ? 'Resume' : 'Pause',
           ),
+          if (showDebug) ...[
+            _HudChip(icon: Icons.bug_report, label: '${state.fps.round()} FPS'),
+            _HudChip(icon: Icons.speed, label: '${state.currentSpeed.round()} speed'),
+            _HudChip(icon: Icons.score, label: 'Score ${state.score}'),
+            _HudChip(icon: Icons.flag, label: _flagSummary()),
+          ],
         ],
       ),
     );
+  }
+
+  String _flagSummary() {
+    final enabled = activeFlags.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key)
+        .join(', ');
+    return enabled.isEmpty ? 'No Intelli flags' : enabled;
   }
 }
 

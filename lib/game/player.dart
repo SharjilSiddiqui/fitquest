@@ -46,9 +46,9 @@ class RunnerPlayer {
     );
   }
 
-  void jump() {
+  void jump({required double velocity}) {
     if (!grounded) return;
-    velocityY = GameConstants.jumpVelocity;
+    velocityY = velocity;
     motion = RunnerMotion.jumping;
   }
 

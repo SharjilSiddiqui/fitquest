@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../game/runner_screen.dart';
+import '../intellitoggle/screens/intellitoggle_screen.dart';
+import '../intellitoggle/state/intellitoggle_provider.dart';
 import '../state/session.dart';
 import '../models/player_data.dart';
 import '../services/cloud_save_service.dart';
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<DailyQuest> quests;
   late FeatureFlagService featureFlags;
   late EventService eventService;
+  late IntellitoggleProvider intellitoggle;
   CloudPersistenceInfo? _cloudPersistence;
   int _selectedTab = 0;
 
@@ -195,9 +198,11 @@ class _HomeScreenState extends State<HomeScreen> {
     player = widget.player;
     featureFlags = FeatureFlagService(widget.session.dartStream);
     eventService = EventService(widget.session.dartStream);
+    intellitoggle = IntellitoggleProvider();
 
     _loadFlags();
     _loadCloudPersistence();
+    intellitoggle.load();
 
     checkDailyStreak();
 
@@ -637,6 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
       AdventureRunScreen(
         player: player,
         featureFlags: featureFlags,
+        intellitoggle: intellitoggle,
         active: _selectedTab == 0,
         onPlayerChanged: _applyRunnerPlayer,
         onSave: _saveRunnerPlayer,
@@ -665,6 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       AchievementsDashboardTab(achievements: player.achievements),
       ShopDashboardTab(player: player, onPurchaseItem: _purchaseItem),
+      IntellitoggleScreen(provider: intellitoggle),
       BossBattleDashboardTab(
         player: player,
         onSelectBoss: _selectBoss,
@@ -696,6 +703,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Achievements',
           ),
           NavigationDestination(icon: Icon(Icons.storefront), label: 'Shop'),
+          NavigationDestination(icon: Icon(Icons.hub), label: 'Intelli'),
           NavigationDestination(
             icon: Icon(Icons.sports_martial_arts),
             label: 'Battle',

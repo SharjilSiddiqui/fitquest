@@ -13,6 +13,10 @@ class AdventureGameState {
     this.itemsCollected = 0,
     this.combo = 0,
     this.bestCombo = 0,
+    this.score = 0,
+    this.stamina = 100,
+    this.currentSpeed = 0,
+    this.fps = 0,
     this.paused = false,
     this.gameOver = false,
     this.timeSeconds = 0,
@@ -27,6 +31,10 @@ class AdventureGameState {
   final int itemsCollected;
   final int combo;
   final int bestCombo;
+  final int score;
+  final double stamina;
+  final double currentSpeed;
+  final double fps;
   final bool paused;
   final bool gameOver;
   final double timeSeconds;
@@ -41,6 +49,10 @@ class AdventureGameState {
     int? itemsCollected,
     int? combo,
     int? bestCombo,
+    int? score,
+    double? stamina,
+    double? currentSpeed,
+    double? fps,
     bool? paused,
     bool? gameOver,
     double? timeSeconds,
@@ -55,6 +67,10 @@ class AdventureGameState {
       itemsCollected: itemsCollected ?? this.itemsCollected,
       combo: combo ?? this.combo,
       bestCombo: bestCombo ?? this.bestCombo,
+      score: score ?? this.score,
+      stamina: stamina ?? this.stamina,
+      currentSpeed: currentSpeed ?? this.currentSpeed,
+      fps: fps ?? this.fps,
       paused: paused ?? this.paused,
       gameOver: gameOver ?? this.gameOver,
       timeSeconds: timeSeconds ?? this.timeSeconds,
