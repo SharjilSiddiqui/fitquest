@@ -6,9 +6,14 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/cloud_save_service.dart';
 import 'state/session.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const FitQuestApp());
 }
 

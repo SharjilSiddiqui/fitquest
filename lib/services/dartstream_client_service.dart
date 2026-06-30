@@ -54,6 +54,16 @@ class DartStreamClientService {
     return _connection!.session;
   }
 
+  Future<DartStreamSession> signInWithFirebaseIdToken(
+    String firebaseIdToken,
+  ) async {
+    final session = await _baseClient.onboardFirebaseIdToken(firebaseIdToken);
+
+    _connection = DartStreamConnection(client: _baseClient, session: session);
+
+    return session;
+  }
+
   void clearSession() {
     _connection = null;
   }

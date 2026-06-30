@@ -71,9 +71,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: null,
+              onPressed: busy
+                  ? null
+                  : () async {
+                      await widget.session.signInWithGoogle();
+                    },
               icon: const Icon(Icons.g_mobiledata),
-              label: const Text('Google Sign-In'),
+              label: const Text('Continue with Google'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(
