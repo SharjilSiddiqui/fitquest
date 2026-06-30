@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-enum CollectibleType { water, food, xpOrb, coin, potion }
+enum CollectibleType { water, food, xpOrb, coin, potion, shield }
 
 class RunCollectible {
   const RunCollectible({
@@ -28,6 +28,7 @@ class RunCollectible {
       case CollectibleType.food:
       case CollectibleType.coin:
       case CollectibleType.potion:
+      case CollectibleType.shield:
         return 0;
     }
   }
@@ -41,6 +42,7 @@ class RunCollectible {
       case CollectibleType.water:
       case CollectibleType.xpOrb:
       case CollectibleType.potion:
+      case CollectibleType.shield:
         return 0;
     }
   }

@@ -13,6 +13,7 @@ class RunnerPlayer {
     this.velocityY = 0,
     this.motion = RunnerMotion.running,
     this.shieldSeconds = 0,
+    this.shieldCharges = 0,
   }) : hp = hp ?? maxHp;
 
   final String heroClass;
@@ -22,13 +23,14 @@ class RunnerPlayer {
   double velocityY;
   RunnerMotion motion;
   double shieldSeconds;
+  int shieldCharges;
 
   bool get grounded =>
       y >= GameConstants.groundY - GameConstants.playerHeight - 0.5;
 
   bool get sliding => motion == RunnerMotion.sliding;
 
-  bool get shielded => shieldSeconds > 0;
+  bool get shielded => shieldSeconds > 0 || shieldCharges > 0;
 
   Rect get bounds {
     final height = sliding
@@ -79,8 +81,23 @@ class RunnerPlayer {
     }
   }
 
+  bool absorbHit() {
+    if (shieldCharges <= 0) return false;
+    shieldCharges -= 1;
+    shieldSeconds = 0;
+    return true;
+  }
+
+  void addShield() {
+    shieldCharges = 1;
+  }
+
+  void heal(int amount) {
+    hp = (hp + amount).clamp(0, maxHp);
+  }
+
   void takeDamage(int amount, {required double shieldDuration}) {
-    if (shielded) return;
+    if (shieldSeconds > 0) return;
     hp = (hp - amount).clamp(0, maxHp);
     shieldSeconds = shieldDuration;
   }

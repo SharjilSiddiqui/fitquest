@@ -32,7 +32,7 @@ class RunObstacle {
   double get height {
     switch (type) {
       case ObstacleType.tree:
-        return 96;
+        return 72;
       case ObstacleType.sleepMonster:
         return 58;
       case ObstacleType.spike:

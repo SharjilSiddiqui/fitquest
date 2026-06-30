@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'collectible.dart';
 import 'collision.dart';
 import 'game_constants.dart';
 import 'game_state.dart';
@@ -42,6 +43,7 @@ class RunnerEngine extends ChangeNotifier {
   late final double _speedMultiplier;
   late final double _xpMultiplier;
   late final double _shieldMultiplier;
+  double _viewportWidth = GameConstants.defaultWorldWidth;
   double _saveTimer = 0;
   double _slideTimer = 0;
   List<RunnerEvent> _pendingEvents = <RunnerEvent>[];
@@ -87,6 +89,11 @@ class RunnerEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setViewportWidth(double width) {
+    if (width <= 0) return;
+    _viewportWidth = width;
+  }
+
   void jump() {
     if (state.paused || state.gameOver) return;
     state.player.jump();
@@ -119,7 +126,7 @@ class RunnerEngine extends ChangeNotifier {
     }
     player.tick(delta);
 
-    final batch = _spawnManager.tick(delta, state.distance);
+    final batch = _spawnManager.tick(delta, state.distance, _viewportWidth);
     var collectibles = [
       ...state.collectibles.map((item) => item.move(dx)),
       ...batch.collectibles,
@@ -140,6 +147,7 @@ class RunnerEngine extends ChangeNotifier {
       if (!Collision.intersects(player.bounds, collectible.bounds)) continue;
 
       collectedIds.add(collectible.id);
+      _applyCollectibleEffect(collectible);
       final xp = _scaledXp(collectible.xp);
       xpEarned += xp;
       goldEarned += collectible.gold;
@@ -167,11 +175,14 @@ class RunnerEngine extends ChangeNotifier {
         continue;
       }
 
-      player.takeDamage(
-        obstacle.damage,
-        shieldDuration: GameConstants.shieldSeconds * _shieldMultiplier,
-      );
-      combo = 0;
+      final absorbed = player.absorbHit();
+      if (!absorbed) {
+        player.takeDamage(
+          obstacle.damage,
+          shieldDuration: GameConstants.shieldSeconds * _shieldMultiplier,
+        );
+        combo = 0;
+      }
       hitIds.add(obstacle.id);
       _pendingEvents.add(
         RunnerEvent(type: RunnerEventType.obstacle, obstacle: obstacle),
@@ -212,5 +223,20 @@ class RunnerEngine extends ChangeNotifier {
     if (baseXp == 0) return 0;
     final flagMultiplier = _doubleXp ? 2.0 : 1.0;
     return (baseXp * flagMultiplier * _xpMultiplier).round();
+  }
+
+  void _applyCollectibleEffect(RunCollectible collectible) {
+    switch (collectible.type) {
+      case CollectibleType.water:
+        state.player.heal(5);
+      case CollectibleType.food:
+        state.player.heal(15);
+      case CollectibleType.shield:
+        state.player.addShield();
+      case CollectibleType.xpOrb:
+      case CollectibleType.coin:
+      case CollectibleType.potion:
+        break;
+    }
   }
 }

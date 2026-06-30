@@ -277,27 +277,37 @@ class _AdventureRunScreenState extends State<AdventureRunScreen>
               Card(
                 clipBehavior: Clip.antiAlias,
                 elevation: 3,
-                child: AspectRatio(
-                  aspectRatio:
-                      GameConstants.worldWidth / GameConstants.worldHeight,
-                  child: AnimatedBuilder(
-                    animation: _engine,
-                    builder: (context, _) {
-                      return Stack(
-                        children: [
-                          _RunnerWorld(state: _engine.state),
-                          Positioned.fill(
-                            child: AdventureHud(
-                              state: _engine.state,
-                              player: _currentPlayer,
-                              onPause: _engine.togglePause,
-                            ),
-                          ),
-                          if (_engine.state.paused)
-                            Positioned.fill(
-                              child: PauseMenu(onResume: _engine.resume),
-                            ),
-                        ],
+                child: SizedBox(
+                  width: double.infinity,
+                  height: GameConstants.worldHeight,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final viewportWidth = constraints.maxWidth;
+                      _engine.setViewportWidth(viewportWidth);
+
+                      return AnimatedBuilder(
+                        animation: _engine,
+                        builder: (context, _) {
+                          return Stack(
+                            children: [
+                              _RunnerWorld(
+                                state: _engine.state,
+                                viewportWidth: viewportWidth,
+                              ),
+                              Positioned.fill(
+                                child: AdventureHud(
+                                  state: _engine.state,
+                                  player: _currentPlayer,
+                                  onPause: _engine.togglePause,
+                                ),
+                              ),
+                              if (_engine.state.paused)
+                                Positioned.fill(
+                                  child: PauseMenu(onResume: _engine.resume),
+                                ),
+                            ],
+                          );
+                        },
                       );
                     },
                   ),
@@ -369,20 +379,21 @@ class _AdventureHeader extends StatelessWidget {
 }
 
 class _RunnerWorld extends StatelessWidget {
-  const _RunnerWorld({required this.state});
+  const _RunnerWorld({required this.state, required this.viewportWidth});
 
   final AdventureGameState state;
+  final double viewportWidth;
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.fill,
+    return ClipRect(
       child: SizedBox(
-        width: GameConstants.worldWidth,
+        width: viewportWidth,
         height: GameConstants.worldHeight,
         child: Stack(
+          clipBehavior: Clip.hardEdge,
           children: [
-            _Background(distance: state.distance),
+            _Background(distance: state.distance, viewportWidth: viewportWidth),
             Positioned(
               left: 0,
               right: 0,
@@ -407,9 +418,10 @@ class _RunnerWorld extends StatelessWidget {
 }
 
 class _Background extends StatelessWidget {
-  const _Background({required this.distance});
+  const _Background({required this.distance, required this.viewportWidth});
 
   final double distance;
+  final double viewportWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +444,7 @@ class _Background extends StatelessWidget {
             ),
           ),
         ),
-        for (var index = 0; index < 7; index++)
+        for (var index = 0; index < (viewportWidth / 180).ceil() + 2; index++)
           Positioned(
             left: offset + index * 180,
             bottom: 72,
@@ -535,6 +547,8 @@ class _CollectibleSprite extends StatelessWidget {
         return const Color(0xFFFFE082);
       case CollectibleType.potion:
         return const Color(0xFFE1BEE7);
+      case CollectibleType.shield:
+        return colorScheme.primaryContainer;
     }
   }
 
@@ -550,6 +564,8 @@ class _CollectibleSprite extends StatelessWidget {
         return Icons.paid;
       case CollectibleType.potion:
         return Icons.local_drink;
+      case CollectibleType.shield:
+        return Icons.shield;
     }
   }
 }
