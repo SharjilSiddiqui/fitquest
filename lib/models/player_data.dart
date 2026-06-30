@@ -37,6 +37,18 @@ class PlayerData {
 
   final List<String> achievements;
 
+  final int lastRunDistance;
+  final int lastRunXp;
+  final int lastRunGold;
+  final int lastRunItems;
+  final int lastRunCombo;
+  final int bestRunDistance;
+  final int bestRunXp;
+  final int bestRunGold;
+  final int bestRunItems;
+  final int bestRunCombo;
+  final int totalRunDistance;
+
   const PlayerData({
     required this.heroClass,
     required this.level,
@@ -75,6 +87,18 @@ class PlayerData {
     required this.defeatedBosses,
 
     required this.achievements,
+
+    this.lastRunDistance = 0,
+    this.lastRunXp = 0,
+    this.lastRunGold = 0,
+    this.lastRunItems = 0,
+    this.lastRunCombo = 0,
+    this.bestRunDistance = 0,
+    this.bestRunXp = 0,
+    this.bestRunGold = 0,
+    this.bestRunItems = 0,
+    this.bestRunCombo = 0,
+    this.totalRunDistance = 0,
   });
 
   factory PlayerData.empty() {
@@ -116,6 +140,18 @@ class PlayerData {
       defeatedBosses: [],
 
       achievements: [],
+
+      lastRunDistance: 0,
+      lastRunXp: 0,
+      lastRunGold: 0,
+      lastRunItems: 0,
+      lastRunCombo: 0,
+      bestRunDistance: 0,
+      bestRunXp: 0,
+      bestRunGold: 0,
+      bestRunItems: 0,
+      bestRunCombo: 0,
+      totalRunDistance: 0,
     );
   }
 
@@ -158,6 +194,18 @@ class PlayerData {
       defeatedBosses: List<String>.from(json['defeatedBosses'] ?? []),
 
       achievements: List<String>.from(json['achievements'] ?? []),
+
+      lastRunDistance: json['lastRunDistance'] ?? 0,
+      lastRunXp: json['lastRunXp'] ?? 0,
+      lastRunGold: json['lastRunGold'] ?? 0,
+      lastRunItems: json['lastRunItems'] ?? 0,
+      lastRunCombo: json['lastRunCombo'] ?? 0,
+      bestRunDistance: json['bestRunDistance'] ?? 0,
+      bestRunXp: json['bestRunXp'] ?? 0,
+      bestRunGold: json['bestRunGold'] ?? 0,
+      bestRunItems: json['bestRunItems'] ?? 0,
+      bestRunCombo: json['bestRunCombo'] ?? 0,
+      totalRunDistance: json['totalRunDistance'] ?? 0,
     );
   }
 
@@ -200,6 +248,18 @@ class PlayerData {
       'defeatedBosses': defeatedBosses,
 
       'achievements': achievements,
+
+      'lastRunDistance': lastRunDistance,
+      'lastRunXp': lastRunXp,
+      'lastRunGold': lastRunGold,
+      'lastRunItems': lastRunItems,
+      'lastRunCombo': lastRunCombo,
+      'bestRunDistance': bestRunDistance,
+      'bestRunXp': bestRunXp,
+      'bestRunGold': bestRunGold,
+      'bestRunItems': bestRunItems,
+      'bestRunCombo': bestRunCombo,
+      'totalRunDistance': totalRunDistance,
     };
   }
 
@@ -245,6 +305,18 @@ class PlayerData {
     List<String>? defeatedBosses,
 
     List<String>? achievements,
+
+    int? lastRunDistance,
+    int? lastRunXp,
+    int? lastRunGold,
+    int? lastRunItems,
+    int? lastRunCombo,
+    int? bestRunDistance,
+    int? bestRunXp,
+    int? bestRunGold,
+    int? bestRunItems,
+    int? bestRunCombo,
+    int? totalRunDistance,
   }) {
     return PlayerData(
       heroClass: heroClass ?? this.heroClass,
@@ -296,6 +368,18 @@ class PlayerData {
       defeatedBosses: defeatedBosses ?? this.defeatedBosses,
 
       achievements: achievements ?? this.achievements,
+
+      lastRunDistance: lastRunDistance ?? this.lastRunDistance,
+      lastRunXp: lastRunXp ?? this.lastRunXp,
+      lastRunGold: lastRunGold ?? this.lastRunGold,
+      lastRunItems: lastRunItems ?? this.lastRunItems,
+      lastRunCombo: lastRunCombo ?? this.lastRunCombo,
+      bestRunDistance: bestRunDistance ?? this.bestRunDistance,
+      bestRunXp: bestRunXp ?? this.bestRunXp,
+      bestRunGold: bestRunGold ?? this.bestRunGold,
+      bestRunItems: bestRunItems ?? this.bestRunItems,
+      bestRunCombo: bestRunCombo ?? this.bestRunCombo,
+      totalRunDistance: totalRunDistance ?? this.totalRunDistance,
     );
   }
 }

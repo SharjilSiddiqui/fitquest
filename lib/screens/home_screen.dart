@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../game/runner_screen.dart';
 import '../state/session.dart';
 import '../models/player_data.dart';
 import '../services/cloud_save_service.dart';
@@ -43,6 +44,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       setState(() => _cloudPersistence = status);
     }
+  }
+
+  Future<void> _saveRunnerPlayer(PlayerData next) async {
+    _applyRunnerPlayer(next);
+    await savePlayer();
+  }
+
+  void _applyRunnerPlayer(PlayerData next) {
+    setState(() {
+      player = next;
+      updateAchievements();
+    });
   }
 
   Future<void> _loadFlags() async {
@@ -602,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenChest: _openChest,
           onGoToShop: () {
             Navigator.pop(context);
-            setState(() => _selectedTab = 4);
+            setState(() => _selectedTab = 5);
           },
         ),
       ),
@@ -621,6 +634,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final tabs = [
+      AdventureRunScreen(
+        player: player,
+        featureFlags: featureFlags,
+        active: _selectedTab == 0,
+        onPlayerChanged: _applyRunnerPlayer,
+        onSave: _saveRunnerPlayer,
+      ),
       HomeDashboardTab(
         player: player,
         onClaimDailyReward: _claimDailyReward,
@@ -667,6 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _selectedTab,
         onDestinationSelected: (index) => setState(() => _selectedTab = index),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.directions_run), label: 'Run'),
           NavigationDestination(icon: Icon(Icons.home_filled), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.task_alt), label: 'Quests'),
           NavigationDestination(icon: Icon(Icons.shield), label: 'Hero'),

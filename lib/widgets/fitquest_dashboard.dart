@@ -465,11 +465,15 @@ class BossBattleDashboardTab extends StatelessWidget {
             ),
           ),
         const SectionTitle(title: 'Bosses'),
-        ...RpgService.bosses.map(
-          (boss) => RpgCard(
+        ...RpgService.bosses.asMap().entries.map((entry) {
+          final boss = entry.value;
+          final requiredDistance = _requiredBossDistance(entry.key);
+          final unlocked = player.bestRunDistance >= requiredDistance;
+
+          return RpgCard(
             child: Row(
               children: [
-                const CircleAvatar(child: Icon(Icons.shield)),
+                CircleAvatar(child: Icon(unlocked ? Icons.shield : Icons.lock)),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -482,23 +486,36 @@ class BossBattleDashboardTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${boss.hp} HP • +${boss.rewardXp} XP • +${boss.rewardGold} Gold',
+                        unlocked
+                            ? '${boss.hp} HP • +${boss.rewardXp} XP • +${boss.rewardGold} Gold'
+                            : 'Reach ${requiredDistance}m in Adventure Run to prepare',
                       ),
                     ],
                   ),
                 ),
                 OutlinedButton(
-                  onPressed: () => onSelectBoss(boss.name),
+                  onPressed: unlocked ? () => onSelectBoss(boss.name) : null,
                   child: Text(
                     player.activeBossName == boss.name ? 'Active' : 'Select',
                   ),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
+  }
+
+  int _requiredBossDistance(int index) {
+    switch (index) {
+      case 0:
+        return 500;
+      case 1:
+        return 1000;
+      default:
+        return 2000;
+    }
   }
 }
 
