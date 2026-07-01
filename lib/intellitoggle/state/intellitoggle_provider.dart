@@ -40,6 +40,14 @@ class IntellitoggleProvider extends ChangeNotifier {
   }
 
   Future<void> load({bool forceRefreshToken = false}) async {
+    // ignore: avoid_print
+    print('[Intellitoggle] provider.load()');
+    if (loading) {
+      // ignore: avoid_print
+      print('[Intellitoggle] provider.load() skipped; already loading');
+      return;
+    }
+
     loading = true;
     errorMessage = null;
     notifyListeners();

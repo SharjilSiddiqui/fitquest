@@ -13,7 +13,16 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+    // ignore: avoid_print
+    print('[Intellitoggle] dotenv loaded');
+  } catch (e) {
+    // ignore: avoid_print
+    print(
+      '[Intellitoggle] dotenv load failed, using dart-defines if present: $e',
+    );
+  }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 

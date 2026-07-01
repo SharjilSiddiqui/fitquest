@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/token_response.dart';
+import 'intellitoggle_config.dart';
 
 class IntellitoggleAuthService {
   IntellitoggleAuthService({http.Client? httpClient})
@@ -13,16 +13,28 @@ class IntellitoggleAuthService {
   IntellitoggleTokenResponse? _cachedToken;
 
   Future<String> bearerToken({bool forceRefresh = false}) async {
+    // ignore: avoid_print
+    print('[Intellitoggle] bearerToken()');
+
     final cachedToken = _cachedToken;
     if (!forceRefresh && cachedToken != null && !cachedToken.expired) {
+      // ignore: avoid_print
+      print('[Intellitoggle] Using cached OAuth token');
       return cachedToken.accessToken;
     }
 
-    final tokenUrl = _env('INTELLITOGGLE_TOKEN_URL');
-    final clientId = _env('INTELLITOGGLE_CLIENT_ID');
-    final clientSecret = _env('INTELLITOGGLE_CLIENT_SECRET');
+    final tokenUrl = IntellitoggleConfig.value('INTELLITOGGLE_TOKEN_URL');
+    final clientId = IntellitoggleConfig.value('INTELLITOGGLE_CLIENT_ID');
+    final clientSecret = IntellitoggleConfig.value(
+      'INTELLITOGGLE_CLIENT_SECRET',
+    );
 
     final basic = base64Encode(utf8.encode('$clientId:$clientSecret'));
+
+    // ignore: avoid_print
+    print('[Intellitoggle] Requesting OAuth token...');
+    // ignore: avoid_print
+    print('[Intellitoggle] Calling OAuth endpoint $tokenUrl');
 
     final response = await _httpClient.post(
       Uri.parse(tokenUrl),
@@ -32,6 +44,9 @@ class IntellitoggleAuthService {
       },
       body: const {'grant_type': 'client_credentials'},
     );
+
+    // ignore: avoid_print
+    print('[Intellitoggle] OAuth response ${response.statusCode}');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -51,15 +66,7 @@ class IntellitoggleAuthService {
 
     _cachedToken = token;
     // ignore: avoid_print
-    print('[Intellitoggle] OAuth token acquired');
+    print('[Intellitoggle] OAuth success');
     return token.accessToken;
-  }
-
-  String _env(String key) {
-    final value = dotenv.maybeGet(key)?.trim();
-    if (value == null || value.isEmpty || value.startsWith('your_')) {
-      throw StateError('Missing Intellitoggle environment value: $key');
-    }
-    return value;
   }
 }

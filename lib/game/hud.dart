@@ -51,7 +51,10 @@ class AdventureHud extends StatelessWidget {
           ),
           if (showDebug) ...[
             _HudChip(icon: Icons.bug_report, label: '${state.fps.round()} FPS'),
-            _HudChip(icon: Icons.speed, label: '${state.currentSpeed.round()} speed'),
+            _HudChip(
+              icon: Icons.speed,
+              label: '${state.currentSpeed.round()} speed',
+            ),
             _HudChip(icon: Icons.score, label: 'Score ${state.score}'),
             _HudChip(icon: Icons.flag, label: _flagSummary()),
           ],

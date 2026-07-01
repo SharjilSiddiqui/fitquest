@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/evaluation_result.dart';
 import '../models/feature_flag.dart';
 import 'intellitoggle_auth_service.dart';
+import 'intellitoggle_config.dart';
 
 class IntellitoggleFlagDefinition {
   const IntellitoggleFlagDefinition(this.key, this.name);
@@ -39,6 +39,8 @@ class IntellitoggleService {
     bool forceRefreshToken = false,
   }) async {
     // ignore: avoid_print
+    print('[Intellitoggle] evaluateAll()');
+    // ignore: avoid_print
     print('[Intellitoggle] Evaluating flags...');
 
     final now = DateTime.now();
@@ -68,17 +70,25 @@ class IntellitoggleService {
     String flagKey, {
     bool forceRefreshToken = false,
   }) async {
+    // ignore: avoid_print
+    print('[Intellitoggle] evaluateFlag($flagKey)');
+    // ignore: avoid_print
+    print('[Intellitoggle] Evaluating $flagKey');
+
     final token = await _authService.bearerToken(
       forceRefresh: forceRefreshToken,
     );
-    final apiUrl = _env('INTELLITOGGLE_API_URL');
-    final tenantId = _env('INTELLITOGGLE_TENANT_ID');
-    final projectId = _env('INTELLITOGGLE_PROJECT_ID');
-    final environment = _env('INTELLITOGGLE_ENVIRONMENT');
+    final apiUrl = IntellitoggleConfig.url('INTELLITOGGLE_API_URL');
+    final tenantId = IntellitoggleConfig.value('INTELLITOGGLE_TENANT_ID');
+    final projectId = IntellitoggleConfig.value('INTELLITOGGLE_PROJECT_ID');
+    final environment = IntellitoggleConfig.value('INTELLITOGGLE_ENVIRONMENT');
 
     final uri = Uri.parse(
       '$apiUrl/api/v1/tenants/$tenantId/projects/$projectId/environments/$environment/flags/$flagKey/evaluate',
     );
+
+    // ignore: avoid_print
+    print('[Intellitoggle] Calling evaluate endpoint $uri');
 
     final response = await _httpClient.post(
       uri,
@@ -94,6 +104,9 @@ class IntellitoggleService {
         },
       }),
     );
+
+    // ignore: avoid_print
+    print('[Intellitoggle] Evaluate response $flagKey ${response.statusCode}');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -114,16 +127,8 @@ class IntellitoggleService {
 
   Map<String, String> connectionInfo() {
     return {
-      'environment': _env('INTELLITOGGLE_ENVIRONMENT'),
-      'projectId': _env('INTELLITOGGLE_PROJECT_ID'),
+      'environment': IntellitoggleConfig.value('INTELLITOGGLE_ENVIRONMENT'),
+      'projectId': IntellitoggleConfig.value('INTELLITOGGLE_PROJECT_ID'),
     };
-  }
-
-  String _env(String key) {
-    final value = dotenv.maybeGet(key)?.trim();
-    if (value == null || value.isEmpty || value.startsWith('your_')) {
-      throw StateError('Missing Intellitoggle environment value: $key');
-    }
-    return value.endsWith('/') ? value.substring(0, value.length - 1) : value;
   }
 }

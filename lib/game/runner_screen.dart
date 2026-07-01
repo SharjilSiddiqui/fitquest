@@ -487,7 +487,11 @@ class _Background extends StatelessWidget {
           const Positioned(
             top: 34,
             right: 72,
-            child: Icon(Icons.nightlight_round, color: Color(0xFFFFF8E1), size: 44),
+            child: Icon(
+              Icons.nightlight_round,
+              color: Color(0xFFFFF8E1),
+              size: 44,
+            ),
           ),
           for (var index = 0; index < 14; index++)
             Positioned(
@@ -511,11 +515,6 @@ class _Background extends StatelessWidget {
       ],
     );
   }
-}
-
-bool _isNightMode(BuildContext context) {
-  final state = context.findAncestorStateOfType<_AdventureRunScreenState>();
-  return state?.widget.intellitoggle.enabled('night-mode') ?? false;
 }
 
 class _HeroSprite extends StatelessWidget {

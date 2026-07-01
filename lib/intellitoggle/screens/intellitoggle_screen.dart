@@ -3,16 +3,38 @@ import 'package:flutter/material.dart';
 import '../state/intellitoggle_provider.dart';
 import '../widgets/flag_card.dart';
 
-class IntellitoggleScreen extends StatelessWidget {
+class IntellitoggleScreen extends StatefulWidget {
   const IntellitoggleScreen({super.key, required this.provider});
 
   final IntellitoggleProvider provider;
 
   @override
+  State<IntellitoggleScreen> createState() => _IntellitoggleScreenState();
+}
+
+class _IntellitoggleScreenState extends State<IntellitoggleScreen> {
+  bool _didRequestInitialLoad = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // ignore: avoid_print
+    print('[Intellitoggle] initState');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didRequestInitialLoad) return;
+      _didRequestInitialLoad = true;
+      if (widget.provider.flags.isEmpty && !widget.provider.loading) {
+        widget.provider.load();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: provider,
+      animation: widget.provider,
       builder: (context, _) {
+        final provider = widget.provider;
         return RefreshIndicator(
           onRefresh: () => provider.load(),
           child: ListView(
@@ -23,7 +45,9 @@ class IntellitoggleScreen extends StatelessWidget {
               if (provider.loading && provider.flags.isEmpty)
                 const _LoadingCard()
               else if (provider.errorMessage != null && provider.flags.isEmpty)
-                _ErrorCard(onRetry: () => provider.load(forceRefreshToken: true))
+                _ErrorCard(
+                  onRetry: () => provider.load(forceRefreshToken: true),
+                )
               else ...[
                 FilledButton.icon(
                   onPressed: provider.loading ? null : () => provider.load(),
@@ -71,10 +95,7 @@ class _Header extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.hub,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+                  child: Icon(Icons.hub, color: colorScheme.onPrimaryContainer),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
