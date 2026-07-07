@@ -204,6 +204,37 @@ The OAuth2 CLI is completely separate from the Flutter application and **is not 
 
 ---
 
+## Using the DartStream CLI
+
+Install the official DartStream CLI:
+
+```bash
+dart pub global activate ds_dartstream 0.0.8
+```
+
+Log in with a CLI token generated from the DartStream dashboard:
+
+```bash
+dartstream login <your-cli-token> \
+  --api-url https://dev-api.dartstream.io
+```
+
+Validate the project manifest:
+
+```bash
+dartstream validate --strict
+```
+
+Show CLI help:
+
+```bash
+dartstream --help
+```
+
+The CLI validates the DartStream project manifest in `dartstream.yaml`.
+
+---
+
 # 📂 Project Structure
 
 ```text

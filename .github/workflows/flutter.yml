@@ -20,11 +20,24 @@ jobs:
         with:
           channel: stable
 
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.12.2
+
       - name: Show Flutter version
         run: flutter --version
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Install DartStream CLI
+        run: |
+          dart pub global activate ds_dartstream 0.0.8
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Validate DartStream manifest
+        run: dartstream validate --strict
 
       - name: Analyze
         run: flutter analyze
