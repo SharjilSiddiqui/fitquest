@@ -39,6 +39,9 @@ jobs:
       - name: Validate DartStream manifest
         run: dartstream validate --strict
 
+      - name: Create .env
+        run: cp .env.example .env  
+
       - name: Analyze
         run: flutter analyze
 
