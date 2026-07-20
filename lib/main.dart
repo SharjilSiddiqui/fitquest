@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'models/player_data.dart';
 import 'screens/character_setup_screen.dart';
@@ -12,17 +11,6 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  try {
-    await dotenv.load(fileName: '.env');
-    // ignore: avoid_print
-    print('[Intellitoggle] dotenv loaded');
-  } catch (e) {
-    // ignore: avoid_print
-    print(
-      '[Intellitoggle] dotenv load failed, using dart-defines if present: $e',
-    );
-  }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 

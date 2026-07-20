@@ -18,8 +18,6 @@ class _IntellitoggleScreenState extends State<IntellitoggleScreen> {
   @override
   void initState() {
     super.initState();
-    // ignore: avoid_print
-    print('[Intellitoggle] initState');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _didRequestInitialLoad) return;
       _didRequestInitialLoad = true;
@@ -108,7 +106,7 @@ class _Header extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 2),
-                      const Text('Live Feature Flags'),
+                      const Text('CLI-evaluated feature flag snapshot'),
                     ],
                   ),
                 ),
@@ -126,7 +124,7 @@ class _Header extends StatelessWidget {
                   ),
                   label: Text(
                     provider.connected
-                        ? 'Connected via OAuth2'
+                        ? 'Browser demo snapshot'
                         : 'Disconnected',
                   ),
                 ),

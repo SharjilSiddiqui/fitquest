@@ -33,7 +33,6 @@ dependencies:
 
   dartstream_client: ^0.0.1
   http: ^1.6.0
-  flutter_dotenv: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -64,8 +63,6 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  assets:
-    - .env
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

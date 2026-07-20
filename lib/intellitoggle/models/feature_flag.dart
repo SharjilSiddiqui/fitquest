@@ -22,6 +22,7 @@ class IntellitoggleFeatureFlag {
     required String name,
     required IntellitoggleEvaluationResult result,
     DateTime? lastUpdated,
+    String? description,
   }) {
     return IntellitoggleFeatureFlag(
       key: key,
@@ -29,6 +30,7 @@ class IntellitoggleFeatureFlag {
       enabled: result.enabled,
       evaluated: result.evaluated,
       lastUpdated: lastUpdated ?? DateTime.now(),
+      description: description,
     );
   }
 }

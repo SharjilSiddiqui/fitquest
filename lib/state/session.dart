@@ -69,58 +69,35 @@ class Session extends ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint("STEP 1");
-
       final googleSignIn = GoogleSignIn(
         clientId:
             '420891456414-olomuv6sp93iksu5t0vqk3r9rn12o91f.apps.googleusercontent.com',
       );
 
-      debugPrint("STEP 2");
-
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-      debugPrint("STEP 3");
-      debugPrint("googleUser = $googleUser");
-
       if (googleUser == null) {
-        debugPrint("STEP 4");
         status = SessionStatus.signedOut;
         notifyListeners();
         return;
       }
 
-      debugPrint("STEP 5");
-
       final googleAuth = await googleUser.authentication;
-
-      debugPrint("STEP 6");
-      debugPrint("accessToken=${googleAuth.accessToken}");
-      debugPrint("idToken=${googleAuth.idToken}");
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      debugPrint("STEP 7");
-
       final userCredential = await FirebaseAuth.instance.signInWithCredential(
         credential,
       );
 
-      debugPrint("STEP 8");
-
       final firebaseIdToken = await userCredential.user!.getIdToken();
-
-      debugPrint("STEP 9");
-      debugPrint(firebaseIdToken);
 
       final session = await dartStream.signInWithFirebaseIdToken(
         firebaseIdToken!,
       );
-
-      debugPrint("STEP 10");
 
       dartStreamSession = session;
       email = session.email ?? googleUser.email;
@@ -128,11 +105,7 @@ class Session extends ChangeNotifier {
       tenantId = session.tenantId;
 
       status = SessionStatus.signedIn;
-    } catch (e, s) {
-      debugPrint("FAILED");
-      debugPrint(e.toString());
-      debugPrint(s.toString());
-
+    } catch (e) {
       status = SessionStatus.error;
       errorMessage = e.toString();
     }

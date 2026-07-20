@@ -215,8 +215,7 @@ dart pub global activate ds_dartstream 0.0.8
 Log in with a CLI token generated from the DartStream dashboard:
 
 ```bash
-dartstream login <your-cli-token> \
-  --api-url https://dev-api.dartstream.io
+dartstream login --token <your-cli-token> --api-url https://dev-api.dartstream.io
 ```
 
 Validate the project manifest:
@@ -240,6 +239,7 @@ The CLI validates the DartStream project manifest in `dartstream.yaml`.
 ```text
 .
 ├── bin/
+│   ├── intellitoggle_deepdive.dart
 │   └── oauth2_deepdive.dart
 │
 ├── lib/
@@ -329,32 +329,33 @@ flutter build web \
 
 ## OAuth2 CLI
 
-Create a local `.env` file (never commit it):
-
-```env
-OAUTH2_CLIENT_ID=
-OAUTH2_CLIENT_SECRET=
-
-API_BILLING=https://dev-apibilling.dartstream.io
-API_PLATFORM=https://dev-apiplatform.dartstream.io
-API_EXPERIENCE=https://dev-apiexperience.dartstream.io
-API_REACTIVE=https://dev-apireactive.dartstream.io
-API_PERSISTENCE=https://dev-apipersistence.dartstream.io
-```
-
-Export the variables:
-
-```bash
-set -a
-source .env
-set +a
-```
-
 Run the OAuth2 Deep Dive:
 
 ```bash
-dart run bin/oauth2_deepdive.dart
+dart run \
+  -DOAUTH2_CLIENT_ID=YOUR_CLIENT_ID \
+  -DOAUTH2_CLIENT_SECRET=YOUR_CLIENT_SECRET \
+  -DAPI_BILLING=https://dev-apibilling.dartstream.io \
+  bin/oauth2_deepdive.dart
 ```
+
+Run the IntelliToggle Deep Dive:
+
+```bash
+dart run \
+  -DINTELLITOGGLE_TOKEN_URL=https://dev-api.intellitoggle.com/api/v1/oauth/token \
+  -DINTELLITOGGLE_API_URL=https://dev-api.intellitoggle.com \
+  -DINTELLITOGGLE_CLIENT_ID=YOUR_CLIENT_ID \
+  -DINTELLITOGGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET \
+  -DINTELLITOGGLE_TENANT_ID=YOUR_TENANT_ID \
+  -DINTELLITOGGLE_PROJECT_ID=YOUR_PROJECT_ID \
+  -DINTELLITOGGLE_ENVIRONMENT=development \
+  bin/intellitoggle_deepdive.dart
+```
+
+The Flutter web app does not perform IntelliToggle OAuth. Live IntelliToggle
+evaluation is demonstrated through the CLI so client credentials are never
+bundled into the browser build.
 
 ---
 

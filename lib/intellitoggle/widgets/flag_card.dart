@@ -50,6 +50,13 @@ class IntellitoggleFlagCard extends StatelessWidget {
                     flag.key,
                     style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
+                  if (flag.description != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      flag.description!,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
